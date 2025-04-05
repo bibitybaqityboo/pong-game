@@ -2,49 +2,38 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// Set canvas size to window size
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    // Update game objects after resize
-    updateGameDimensions();
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
 // Game state
 let gameStarted = false;
 let isPaused = false;
 let gameMode = 'single';
 let difficulty = 'medium';
-let currentTheme = 'retro';
 
 // Game objects
-let ball = {
+const ball = {
     x: 0,
     y: 0,
-    radius: 0,
+    radius: 15,
     speed: 5,
     dx: 5,
     dy: 5
 };
 
-let leftPaddle = {
-    x: 0,
+const leftPaddle = {
+    x: 20,
     y: 0,
-    width: 0,
-    height: 0,
+    width: 10,
+    height: 100,
     speed: 8,
     score: 0,
     upPressed: false,
     downPressed: false
 };
 
-let rightPaddle = {
+const rightPaddle = {
     x: 0,
     y: 0,
-    width: 0,
-    height: 0,
+    width: 10,
+    height: 100,
     speed: 8,
     score: 0,
     upPressed: false,
@@ -73,43 +62,28 @@ const themes = {
     }
 };
 
-// Update game dimensions based on canvas size
-function updateGameDimensions() {
-    // Ball size relative to screen
-    ball.radius = Math.min(canvas.width, canvas.height) * 0.015;
-    
-    // Paddle dimensions relative to screen
-    leftPaddle.width = canvas.width * 0.01;
-    leftPaddle.height = canvas.height * 0.2;
-    leftPaddle.x = canvas.width * 0.02;
-    
-    rightPaddle.width = canvas.width * 0.01;
-    rightPaddle.height = canvas.height * 0.2;
-    rightPaddle.x = canvas.width * 0.98 - rightPaddle.width;
-    
-    // Reset positions
-    resetBall();
-    resetPaddles();
-}
-
 // Initialize game
 function initGame() {
-    // Set initial game mode and difficulty
-    document.querySelector('.game-mode-button[data-mode="single"]').classList.add('active');
-    document.querySelector('.difficulty-button[data-difficulty="medium"]').classList.add('active');
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
     
-    // Add event listeners
-    setupEventListeners();
-    setupKeyboardControls();
+    // Position paddles
+    leftPaddle.y = canvas.height / 2 - leftPaddle.height / 2;
+    rightPaddle.x = canvas.width - 30;
+    rightPaddle.y = canvas.height / 2 - rightPaddle.height / 2;
     
-    // Update game dimensions
-    updateGameDimensions();
+    // Reset ball
+    resetBall();
+    
+    // Setup controls
+    setupControls();
     
     // Start game loop
     requestAnimationFrame(gameLoop);
 }
 
-// Reset ball to center
+// Reset ball
 function resetBall() {
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
@@ -117,14 +91,9 @@ function resetBall() {
     ball.dy = ball.speed * (Math.random() > 0.5 ? 1 : -1);
 }
 
-// Reset paddles to center
-function resetPaddles() {
-    leftPaddle.y = canvas.height / 2 - leftPaddle.height / 2;
-    rightPaddle.y = canvas.height / 2 - rightPaddle.height / 2;
-}
-
-// Setup keyboard controls
-function setupKeyboardControls() {
+// Setup controls
+function setupControls() {
+    // Keyboard controls
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowUp') leftPaddle.upPressed = true;
         if (e.key === 'ArrowDown') leftPaddle.downPressed = true;
@@ -143,19 +112,6 @@ function setupKeyboardControls() {
             if (e.key === 's') rightPaddle.downPressed = false;
         }
     });
-}
-
-// Setup event listeners
-function setupEventListeners() {
-    // Theme buttons
-    document.querySelectorAll('.theme-button').forEach(button => {
-        button.addEventListener('click', () => {
-            currentTheme = button.dataset.theme;
-            document.body.className = currentTheme;
-            document.querySelectorAll('.theme-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-        });
-    });
 
     // Game mode buttons
     document.querySelectorAll('.game-mode-button').forEach(button => {
@@ -166,22 +122,10 @@ function setupEventListeners() {
         });
     });
 
-    // Difficulty buttons
-    document.querySelectorAll('.difficulty-button').forEach(button => {
-        button.addEventListener('click', () => {
-            difficulty = button.dataset.difficulty;
-            document.querySelectorAll('.difficulty-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
-            updateDifficulty();
-        });
-    });
-
     // Start button
     document.getElementById('startButton').addEventListener('click', () => {
         gameStarted = true;
         document.getElementById('startScreen').style.display = 'none';
-        resetBall();
-        resetPaddles();
     });
 
     // Pause screen buttons
@@ -191,34 +135,8 @@ function setupEventListeners() {
         rightPaddle.score = 0;
         updateScore();
         resetBall();
-        resetPaddles();
         togglePause();
     });
-
-    // Settings screen button
-    document.getElementById('backButton').addEventListener('click', () => {
-        document.getElementById('settingsScreen').style.display = 'none';
-    });
-}
-
-// Update difficulty settings
-function updateDifficulty() {
-    switch (difficulty) {
-        case 'easy':
-            ball.speed = 4;
-            rightPaddle.speed = 6;
-            break;
-        case 'medium':
-            ball.speed = 5;
-            rightPaddle.speed = 8;
-            break;
-        case 'hard':
-            ball.speed = 6;
-            rightPaddle.speed = 10;
-            break;
-    }
-    ball.dx = ball.speed * (ball.dx > 0 ? 1 : -1);
-    ball.dy = ball.speed * (ball.dy > 0 ? 1 : -1);
 }
 
 // Toggle pause
@@ -227,7 +145,7 @@ function togglePause() {
     document.getElementById('pauseScreen').style.display = isPaused ? 'flex' : 'none';
 }
 
-// Update score display
+// Update score
 function updateScore() {
     document.getElementById('scoreDisplay').textContent = `${leftPaddle.score} - ${rightPaddle.score}`;
 }
@@ -235,47 +153,34 @@ function updateScore() {
 // Game loop
 function gameLoop() {
     if (!isPaused && gameStarted) {
-        updateGameState();
+        updateGame();
     }
     drawGame();
     requestAnimationFrame(gameLoop);
 }
 
 // Update game state
-function updateGameState() {
+function updateGame() {
     // Move paddles
-    if (leftPaddle.upPressed && leftPaddle.y > 0) {
-        leftPaddle.y -= leftPaddle.speed;
-    }
-    if (leftPaddle.downPressed && leftPaddle.y < canvas.height - leftPaddle.height) {
-        leftPaddle.y += leftPaddle.speed;
-    }
-
+    if (leftPaddle.upPressed && leftPaddle.y > 0) leftPaddle.y -= leftPaddle.speed;
+    if (leftPaddle.downPressed && leftPaddle.y < canvas.height - leftPaddle.height) leftPaddle.y += leftPaddle.speed;
+    
     if (gameMode === 'multiplayer') {
-        if (rightPaddle.upPressed && rightPaddle.y > 0) {
-            rightPaddle.y -= rightPaddle.speed;
-        }
-        if (rightPaddle.downPressed && rightPaddle.y < canvas.height - rightPaddle.height) {
-            rightPaddle.y += rightPaddle.speed;
-        }
+        if (rightPaddle.upPressed && rightPaddle.y > 0) rightPaddle.y -= rightPaddle.speed;
+        if (rightPaddle.downPressed && rightPaddle.y < canvas.height - rightPaddle.height) rightPaddle.y += rightPaddle.speed;
     } else {
-        // AI for right paddle in single player mode
+        // AI for right paddle
         const paddleCenter = rightPaddle.y + rightPaddle.height / 2;
-        if (paddleCenter < ball.y - 35) {
-            rightPaddle.y += rightPaddle.speed;
-        } else if (paddleCenter > ball.y + 35) {
-            rightPaddle.y -= rightPaddle.speed;
-        }
+        if (paddleCenter < ball.y - 35) rightPaddle.y += rightPaddle.speed;
+        if (paddleCenter > ball.y + 35) rightPaddle.y -= rightPaddle.speed;
     }
 
     // Move ball
     ball.x += ball.dx;
     ball.y += ball.dy;
 
-    // Ball collision with top and bottom
-    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
-        ball.dy = -ball.dy;
-    }
+    // Ball collision with walls
+    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy = -ball.dy;
 
     // Ball collision with paddles
     if (ball.dx < 0) {
@@ -306,10 +211,8 @@ function updateGameState() {
 
 // Draw game
 function drawGame() {
-    const theme = themes[currentTheme];
-    
     // Clear canvas
-    ctx.fillStyle = theme.background;
+    ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw center line
@@ -317,22 +220,22 @@ function drawGame() {
     ctx.beginPath();
     ctx.moveTo(canvas.width / 2, 0);
     ctx.lineTo(canvas.width / 2, canvas.height);
-    ctx.strokeStyle = theme.text;
+    ctx.strokeStyle = '#fff';
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Draw paddles
-    ctx.fillStyle = theme.paddle;
+    ctx.fillStyle = '#fff';
     ctx.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
     ctx.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
 
     // Draw ball
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
-    ctx.fillStyle = theme.ball;
+    ctx.fillStyle = '#fff';
     ctx.fill();
     ctx.closePath();
 }
 
-// Start the game
+// Start game
 window.addEventListener('load', initGame); 
