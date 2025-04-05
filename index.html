@@ -9,24 +9,53 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>Pong Game</title>
-    <link rel="stylesheet" href="style.css?v=1">
+    <link rel="stylesheet" href="style.css?v=2">
     <!-- Force new deployment -->
 </head>
 <body>
     <div class="game-container">
         <div id="startScreen" class="overlay">
             <h1>PONG</h1>
+            <div class="game-mode">
+                <button class="mode-btn" data-mode="single">Single Player</button>
+                <button class="mode-btn" data-mode="two">Two Players</button>
+            </div>
             <div class="difficulty-select">
                 <button class="difficulty-btn" data-difficulty="easy">Easy</button>
                 <button class="difficulty-btn" data-difficulty="medium">Medium</button>
                 <button class="difficulty-btn" data-difficulty="hard">Hard</button>
             </div>
-            <p class="instructions">Use ↑ and ↓ arrows to move</p>
+            <p class="instructions">Single Player: Use ↑ and ↓ arrows to move</p>
+            <p class="two-player-instructions">Two Players: Player 1 (W/S), Player 2 (↑/↓)</p>
             <p class="mobile-instructions">Tap upper/lower half of screen to move</p>
+        </div>
+        <div id="settingsScreen" class="overlay hidden">
+            <h2>SETTINGS</h2>
+            <div class="settings-group">
+                <h3>Colors</h3>
+                <div class="color-picker">
+                    <label>Player 1 Paddle: <input type="color" id="playerColor" value="#ffffff"></label>
+                    <label>Player 2 Paddle: <input type="color" id="computerColor" value="#ffffff"></label>
+                    <label>Ball: <input type="color" id="ballColor" value="#ffffff"></label>
+                    <label>Background: <input type="color" id="bgColor" value="#000000"></label>
+                </div>
+            </div>
+            <div class="settings-group">
+                <h3>Sound</h3>
+                <div class="sound-controls">
+                    <label>Background Music: <input type="range" id="bgMusicVolume" min="0" max="100" value="50"></label>
+                    <label>Sound Effects: <input type="range" id="sfxVolume" min="0" max="100" value="100"></label>
+                </div>
+            </div>
+            <div class="settings-buttons">
+                <button id="saveSettings" class="settings-btn">Save</button>
+                <button id="closeSettings" class="settings-btn">Close</button>
+            </div>
         </div>
         <div id="pauseScreen" class="overlay hidden">
             <h2>PAUSED</h2>
             <p>Press SPACE to resume</p>
+            <button id="settingsBtn" class="settings-btn">Settings</button>
         </div>
         <canvas id="gameCanvas"></canvas>
         <div class="score">
@@ -35,11 +64,6 @@
         <button id="pauseBtn" class="pause-button">⏸️</button>
     </div>
     
-    <!-- Audio elements -->
-    <audio id="paddleHit" src="audio/paddle.mp3" preload="auto"></audio>
-    <audio id="wallHit" src="audio/wall.mp3" preload="auto"></audio>
-    <audio id="score" src="audio/score.mp3" preload="auto"></audio>
-    
-    <script src="game.js?v=1"></script>
+    <script src="game.js?v=2"></script>
 </body>
 </html> 
