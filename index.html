@@ -8,8 +8,10 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <meta http-equiv="Last-Modified" content="0">
+    <meta http-equiv="ETag" content="random">
     <title>Pong Game</title>
-    <link rel="stylesheet" href="style.css?v=2">
+    <link rel="stylesheet" href="style.css?v=3">
     <!-- Force new deployment -->
 </head>
 <body>
@@ -64,6 +66,11 @@
         <button id="pauseBtn" class="pause-button">⏸️</button>
     </div>
     
-    <script src="game.js?v=2"></script>
+    <!-- Audio elements -->
+    <audio id="bgMusic" loop>
+        <source src="audio/background.mp3" type="audio/mpeg">
+    </audio>
+    
+    <script src="game.js?v=3"></script>
 </body>
 </html> 

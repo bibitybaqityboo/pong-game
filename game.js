@@ -54,34 +54,17 @@ let settings = {
 
 // Audio context and settings
 let audioContext;
-let bgMusicNode;
-let bgMusicOscillator;
-let bgMusicGain;
 let sfxGain;
 
 // Initialize audio
 function initAudio() {
     try {
-        // Create audio context
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Create gain nodes
-        bgMusicGain = audioContext.createGain();
         sfxGain = audioContext.createGain();
         
-        // Create background music
-        bgMusicOscillator = audioContext.createOscillator();
-        bgMusicOscillator.type = 'sine';
-        bgMusicOscillator.frequency.setValueAtTime(220, audioContext.currentTime);
-        bgMusicOscillator.connect(bgMusicGain);
-        bgMusicGain.connect(audioContext.destination);
-        
         // Set initial volumes
-        bgMusicGain.gain.value = settings.sound.bgMusicVolume / 100;
+        bgMusic.volume = settings.sound.bgMusicVolume / 100;
         sfxGain.gain.value = settings.sound.sfxVolume / 100;
-        
-        // Start the oscillator
-        bgMusicOscillator.start();
         
         // Resume audio context on user interaction
         document.addEventListener('click', resumeAudioContext, { once: true });
@@ -257,9 +240,7 @@ function applySettings() {
     sfxVolume.value = settings.sound.sfxVolume;
     
     // Apply volumes
-    if (bgMusicGain) {
-        bgMusicGain.gain.value = settings.sound.bgMusicVolume / 100;
-    }
+    bgMusic.volume = settings.sound.bgMusicVolume / 100;
     if (sfxGain) {
         sfxGain.gain.value = settings.sound.sfxVolume / 100;
     }
@@ -421,13 +402,9 @@ function togglePause() {
     pauseScreen.classList.toggle('hidden', !gamePaused);
     
     if (gamePaused) {
-        if (bgMusicGain) {
-            bgMusicGain.gain.value = 0;
-        }
+        bgMusic.pause();
     } else {
-        if (bgMusicGain) {
-            bgMusicGain.gain.value = settings.sound.bgMusicVolume / 100;
-        }
+        bgMusic.play();
         requestAnimationFrame(gameLoop);
     }
 }
@@ -450,10 +427,8 @@ function startGame() {
     // Resume audio context if needed
     resumeAudioContext();
     
-    // Set background music volume
-    if (bgMusicGain) {
-        bgMusicGain.gain.value = settings.sound.bgMusicVolume / 100;
-    }
+    // Start background music
+    bgMusic.play();
     
     requestAnimationFrame(gameLoop);
 }
