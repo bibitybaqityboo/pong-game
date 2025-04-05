@@ -8,40 +8,38 @@
 </head>
 <body>
     <div id="gameContainer">
-        <div id="scoreDisplay">
-            <span id="leftScore">0</span>
-            <span id="rightScore">0</span>
-        </div>
-        
+        <div id="scoreDisplay">0 - 0</div>
         <div id="themeSelector">
-            <button class="theme-button active" data-theme="retro">Retro</button>
+            <button class="theme-button" data-theme="retro">Retro</button>
             <button class="theme-button" data-theme="neon">Neon</button>
             <button class="theme-button" data-theme="minimal">Minimal</button>
         </div>
-        
         <canvas id="gameCanvas"></canvas>
         
+        <!-- Start Screen -->
         <div id="startScreen" class="screen">
             <h1>Pong</h1>
             <div class="game-modes">
-                <button class="game-mode-button active" data-mode="single">Single Player</button>
+                <button class="game-mode-button" data-mode="single">Single Player</button>
                 <button class="game-mode-button" data-mode="multiplayer">Two Players</button>
             </div>
             <div class="difficulty">
-                <button class="difficulty-button active" data-difficulty="medium">Medium</button>
                 <button class="difficulty-button" data-difficulty="easy">Easy</button>
+                <button class="difficulty-button" data-difficulty="medium">Medium</button>
                 <button class="difficulty-button" data-difficulty="hard">Hard</button>
             </div>
             <button id="startButton">Start Game</button>
         </div>
-        
-        <div id="pauseScreen" class="screen">
+
+        <!-- Pause Screen -->
+        <div id="pauseScreen" class="screen" style="display: none;">
             <h2>Game Paused</h2>
             <button id="resumeButton">Resume</button>
             <button id="restartButton">Restart</button>
         </div>
-        
-        <div id="settingsScreen" class="screen">
+
+        <!-- Settings Screen -->
+        <div id="settingsScreen" class="screen" style="display: none;">
             <h2>Settings</h2>
             <div class="settings-group">
                 <label>
@@ -57,10 +55,9 @@
                     <input type="range" id="volumeSlider" min="0" max="100" value="50">
                 </label>
             </div>
-            <button id="closeSettingsButton">Close</button>
+            <button id="backButton">Back</button>
         </div>
     </div>
-    
     <script src="game-simple.js"></script>
 </body>
 </html> 

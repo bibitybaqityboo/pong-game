@@ -16,9 +16,9 @@ const ball = {
     x: canvas.width / 2,
     y: canvas.height / 2,
     radius: 10,
+    speed: 5,
     dx: 5,
-    dy: 5,
-    speed: 5
+    dy: 5
 };
 
 const leftPaddle = {
@@ -26,9 +26,10 @@ const leftPaddle = {
     y: canvas.height / 2 - 50,
     width: 10,
     height: 100,
-    dy: 0,
     speed: 8,
-    score: 0
+    score: 0,
+    upPressed: false,
+    downPressed: false
 };
 
 const rightPaddle = {
@@ -36,57 +37,48 @@ const rightPaddle = {
     y: canvas.height / 2 - 50,
     width: 10,
     height: 100,
-    dy: 0,
     speed: 8,
-    score: 0
+    score: 0,
+    upPressed: false,
+    downPressed: false
 };
 
 // Themes
 const themes = {
     retro: {
-        colors: {
-            background: '#000000',
-            paddle: '#FFFFFF',
-            ball: '#FFFFFF'
-        }
+        background: '#000000',
+        paddle: '#ffffff',
+        ball: '#ffffff',
+        text: '#ffffff'
     },
     neon: {
-        colors: {
-            background: '#000000',
-            paddle: '#00FFFF',
-            ball: '#FF00FF'
-        }
+        background: '#000000',
+        paddle: '#00ffff',
+        ball: '#ff00ff',
+        text: '#ffffff'
     },
     minimal: {
-        colors: {
-            background: '#FFFFFF',
-            paddle: '#000000',
-            ball: '#000000'
-        }
+        background: '#ffffff',
+        paddle: '#000000',
+        ball: '#000000',
+        text: '#000000'
     }
 };
 
 // Initialize game
 function initGame() {
-    // Reset game state
-    gameStarted = false;
-    isPaused = false;
-    leftPaddle.score = 0;
-    rightPaddle.score = 0;
+    // Set initial theme
+    document.body.className = currentTheme;
     
-    // Reset positions
-    resetBall();
-    resetPaddles();
-    
-    // Setup controls
-    setupKeyboardControls();
+    // Add event listeners
     setupEventListeners();
+    setupKeyboardControls();
     
     // Start game loop
     requestAnimationFrame(gameLoop);
 }
 
-// Reset ball position
+// Reset ball to center
 function resetBall() {
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
@@ -94,7 +86,7 @@ function resetBall() {
     ball.dy = ball.speed * (Math.random() > 0.5 ? 1 : -1);
 }
 
-// Reset paddle positions
+// Reset paddles to center
 function resetPaddles() {
     leftPaddle.y = canvas.height / 2 - leftPaddle.height / 2;
     rightPaddle.y = canvas.height / 2 - rightPaddle.height / 2;
@@ -103,68 +95,42 @@ function resetPaddles() {
 // Setup keyboard controls
 function setupKeyboardControls() {
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp') {
-            leftPaddle.dy = -leftPaddle.speed;
-        } else if (e.key === 'ArrowDown') {
-            leftPaddle.dy = leftPaddle.speed;
-        } else if (e.key === 'w' && gameMode === 'multiplayer') {
-            rightPaddle.dy = -rightPaddle.speed;
-        } else if (e.key === 's' && gameMode === 'multiplayer') {
-            rightPaddle.dy = rightPaddle.speed;
-        } else if (e.key === ' ') {
-            togglePause();
+        if (e.key === 'ArrowUp') leftPaddle.upPressed = true;
+        if (e.key === 'ArrowDown') leftPaddle.downPressed = true;
+        if (gameMode === 'multiplayer') {
+            if (e.key === 'w') rightPaddle.upPressed = true;
+            if (e.key === 's') rightPaddle.downPressed = true;
         }
+        if (e.key === 'Escape') togglePause();
     });
 
     document.addEventListener('keyup', (e) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            leftPaddle.dy = 0;
-        } else if ((e.key === 'w' || e.key === 's') && gameMode === 'multiplayer') {
-            rightPaddle.dy = 0;
+        if (e.key === 'ArrowUp') leftPaddle.upPressed = false;
+        if (e.key === 'ArrowDown') leftPaddle.downPressed = false;
+        if (gameMode === 'multiplayer') {
+            if (e.key === 'w') rightPaddle.upPressed = false;
+            if (e.key === 's') rightPaddle.downPressed = false;
         }
     });
 }
 
 // Setup event listeners
 function setupEventListeners() {
-    // Start game button
-    document.getElementById('startButton').addEventListener('click', () => {
-        gameStarted = true;
-        document.getElementById('startScreen').style.display = 'none';
-        document.getElementById('gameContainer').style.display = 'block';
-    });
-
-    // Settings button
-    document.getElementById('settingsButton').addEventListener('click', () => {
-        document.getElementById('settingsScreen').style.display = 'flex';
-    });
-
-    // Close settings button
-    document.getElementById('closeSettingsButton').addEventListener('click', () => {
-        document.getElementById('settingsScreen').style.display = 'none';
-    });
-
-    // Resume button
-    document.getElementById('resumeButton').addEventListener('click', () => {
-        togglePause();
-    });
-
-    // Restart button
-    document.getElementById('restartButton').addEventListener('click', () => {
-        leftPaddle.score = 0;
-        rightPaddle.score = 0;
-        document.getElementById('leftScore').textContent = '0';
-        document.getElementById('rightScore').textContent = '0';
-        resetBall();
-        resetPaddles();
-        togglePause();
+    // Theme buttons
+    document.querySelectorAll('.theme-button').forEach(button => {
+        button.addEventListener('click', () => {
+            currentTheme = button.dataset.theme;
+            document.body.className = currentTheme;
+            document.querySelectorAll('.theme-button').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        });
     });
 
     // Game mode buttons
     document.querySelectorAll('.game-mode-button').forEach(button => {
         button.addEventListener('click', () => {
             gameMode = button.dataset.mode;
-            document.querySelectorAll('.game-mode-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.game-mode-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
         });
     });
@@ -173,19 +139,55 @@ function setupEventListeners() {
     document.querySelectorAll('.difficulty-button').forEach(button => {
         button.addEventListener('click', () => {
             difficulty = button.dataset.difficulty;
-            document.querySelectorAll('.difficulty-button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.difficulty-button').forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
+            updateDifficulty();
         });
     });
 
-    // Theme buttons
-    document.querySelectorAll('.theme-button').forEach(button => {
-        button.addEventListener('click', () => {
-            currentTheme = button.dataset.theme;
-            document.querySelectorAll('.theme-button').forEach(b => b.classList.remove('active'));
-            button.classList.add('active');
-        });
+    // Start button
+    document.getElementById('startButton').addEventListener('click', () => {
+        gameStarted = true;
+        document.getElementById('startScreen').style.display = 'none';
+        resetBall();
+        resetPaddles();
     });
+
+    // Pause screen buttons
+    document.getElementById('resumeButton').addEventListener('click', togglePause);
+    document.getElementById('restartButton').addEventListener('click', () => {
+        leftPaddle.score = 0;
+        rightPaddle.score = 0;
+        updateScore();
+        resetBall();
+        resetPaddles();
+        togglePause();
+    });
+
+    // Settings screen button
+    document.getElementById('backButton').addEventListener('click', () => {
+        document.getElementById('settingsScreen').style.display = 'none';
+    });
+}
+
+// Update difficulty settings
+function updateDifficulty() {
+    switch (difficulty) {
+        case 'easy':
+            ball.speed = 4;
+            rightPaddle.speed = 6;
+            break;
+        case 'medium':
+            ball.speed = 5;
+            rightPaddle.speed = 8;
+            break;
+        case 'hard':
+            ball.speed = 6;
+            rightPaddle.speed = 10;
+            break;
+    }
+    ball.dx = ball.speed * (ball.dx > 0 ? 1 : -1);
+    ball.dy = ball.speed * (ball.dy > 0 ? 1 : -1);
 }
 
 // Toggle pause
@@ -194,50 +196,44 @@ function togglePause() {
     document.getElementById('pauseScreen').style.display = isPaused ? 'flex' : 'none';
 }
 
+// Update score display
+function updateScore() {
+    document.getElementById('scoreDisplay').textContent = `${leftPaddle.score} - ${rightPaddle.score}`;
+}
+
 // Game loop
 function gameLoop() {
-    if (!gameStarted || isPaused) {
-        requestAnimationFrame(gameLoop);
-        return;
+    if (!isPaused && gameStarted) {
+        updateGameState();
     }
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Update game state
-    updateGameState();
-
-    // Draw game
     drawGame();
-
-    // Continue game loop
     requestAnimationFrame(gameLoop);
 }
 
 // Update game state
 function updateGameState() {
     // Move paddles
-    leftPaddle.y += leftPaddle.dy;
-    rightPaddle.y += rightPaddle.dy;
+    if (leftPaddle.upPressed && leftPaddle.y > 0) {
+        leftPaddle.y -= leftPaddle.speed;
+    }
+    if (leftPaddle.downPressed && leftPaddle.y < canvas.height - leftPaddle.height) {
+        leftPaddle.y += leftPaddle.speed;
+    }
 
-    // Keep paddles in bounds
-    if (leftPaddle.y < 0) leftPaddle.y = 0;
-    if (leftPaddle.y + leftPaddle.height > canvas.height) leftPaddle.y = canvas.height - leftPaddle.height;
-    if (rightPaddle.y < 0) rightPaddle.y = 0;
-    if (rightPaddle.y + rightPaddle.height > canvas.height) rightPaddle.y = canvas.height - rightPaddle.height;
-
-    // Update AI only in single player mode
-    if (gameMode === 'single') {
+    if (gameMode === 'multiplayer') {
+        if (rightPaddle.upPressed && rightPaddle.y > 0) {
+            rightPaddle.y -= rightPaddle.speed;
+        }
+        if (rightPaddle.downPressed && rightPaddle.y < canvas.height - rightPaddle.height) {
+            rightPaddle.y += rightPaddle.speed;
+        }
+    } else {
+        // AI for right paddle in single player mode
         const paddleCenter = rightPaddle.y + rightPaddle.height / 2;
-        const ballCenter = ball.y;
-        const difficultyFactor = difficulty === 'easy' ? 0.5 : difficulty === 'medium' ? 0.7 : 0.9;
-        
-        if (paddleCenter < ballCenter - 10) {
-            rightPaddle.dy = rightPaddle.speed * difficultyFactor;
-        } else if (paddleCenter > ballCenter + 10) {
-            rightPaddle.dy = -rightPaddle.speed * difficultyFactor;
-        } else {
-            rightPaddle.dy = 0;
+        if (paddleCenter < ball.y - 35) {
+            rightPaddle.y += rightPaddle.speed;
+        } else if (paddleCenter > ball.y + 35) {
+            rightPaddle.y -= rightPaddle.speed;
         }
     }
 
@@ -246,7 +242,7 @@ function updateGameState() {
     ball.y += ball.dy;
 
     // Ball collision with top and bottom
-    if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
         ball.dy = -ball.dy;
     }
 
@@ -265,22 +261,24 @@ function updateGameState() {
         }
     }
 
-    // Score points
+    // Scoring
     if (ball.x - ball.radius < 0) {
         rightPaddle.score++;
-        document.getElementById('rightScore').textContent = rightPaddle.score;
+        updateScore();
         resetBall();
     } else if (ball.x + ball.radius > canvas.width) {
         leftPaddle.score++;
-        document.getElementById('leftScore').textContent = leftPaddle.score;
+        updateScore();
         resetBall();
     }
 }
 
 // Draw game
 function drawGame() {
-    // Draw background
-    ctx.fillStyle = themes[currentTheme].colors.background;
+    const theme = themes[currentTheme];
+    
+    // Clear canvas
+    ctx.fillStyle = theme.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Draw center line
@@ -288,27 +286,23 @@ function drawGame() {
     ctx.beginPath();
     ctx.moveTo(canvas.width / 2, 0);
     ctx.lineTo(canvas.width / 2, canvas.height);
-    ctx.strokeStyle = themes[currentTheme].colors.paddle;
+    ctx.strokeStyle = theme.text;
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Draw paddles
-    ctx.fillStyle = themes[currentTheme].colors.paddle;
+    ctx.fillStyle = theme.paddle;
     ctx.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
     ctx.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
 
     // Draw ball
-    ctx.fillStyle = themes[currentTheme].colors.ball;
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fillStyle = theme.ball;
     ctx.fill();
-
-    // Draw score
-    ctx.fillStyle = themes[currentTheme].colors.paddle;
-    ctx.font = '32px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText(`${leftPaddle.score} - ${rightPaddle.score}`, canvas.width / 2, 50);
+    ctx.closePath();
 }
 
-// Initialize game when window loads
+// Start the game
+window.addEventListener('load', initGame); 
 window.addEventListener('load', initGame); 
