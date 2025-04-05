@@ -7,50 +7,42 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="game-container">
-        <div id="score">0 - 0</div>
-        <div class="theme-selector">
-            <button class="theme-button theme-retro" title="Retro Theme"></button>
-            <button class="theme-button theme-neon" title="Neon Theme"></button>
-            <button class="theme-button theme-minimalist" title="Minimalist Theme"></button>
+    <div id="gameContainer">
+        <div id="scoreDisplay">
+            <span id="leftScore">0</span>
+            <span id="rightScore">0</span>
         </div>
-        <div class="progress-bar">
-            <div class="progress-fill"></div>
+        
+        <div id="themeSelector">
+            <button class="theme-button active" data-theme="retro">Retro</button>
+            <button class="theme-button" data-theme="neon">Neon</button>
+            <button class="theme-button" data-theme="minimal">Minimal</button>
         </div>
+        
         <canvas id="gameCanvas"></canvas>
         
-        <!-- Start Screen -->
         <div id="startScreen" class="screen">
-            <h1>Pong Game</h1>
-            <div class="game-mode-selector">
-                <button class="mode-button" data-mode="classic">Classic</button>
-                <button class="mode-button" data-mode="endless">Endless</button>
-                <button class="mode-button" data-mode="boss">Boss Battle</button>
-                <button class="mode-button" data-mode="zen">Zen Mode</button>
-                <button class="mode-button" data-mode="wobbly">Wobbly Mode</button>
-                <button class="mode-button" data-mode="meme">Meme Mode</button>
+            <h1>Pong</h1>
+            <div class="game-modes">
+                <button class="game-mode-button active" data-mode="single">Single Player</button>
+                <button class="game-mode-button" data-mode="multiplayer">Two Players</button>
             </div>
-            <div class="button-group">
-                <button id="singlePlayerBtn">Single Player</button>
-                <button id="twoPlayerBtn">Two Player</button>
+            <div class="difficulty">
+                <button class="difficulty-button active" data-difficulty="medium">Medium</button>
+                <button class="difficulty-button" data-difficulty="easy">Easy</button>
+                <button class="difficulty-button" data-difficulty="hard">Hard</button>
             </div>
-            <div class="difficulty-group">
-                <button id="easyBtn">Easy</button>
-                <button id="mediumBtn">Medium</button>
-                <button id="hardBtn">Hard</button>
-            </div>
+            <button id="startButton">Start Game</button>
         </div>
         
-        <!-- Pause Screen -->
         <div id="pauseScreen" class="screen">
-            <h1>Game Paused</h1>
-            <button id="resumeBtn">Resume</button>
-            <button id="quitBtn">Quit</button>
+            <h2>Game Paused</h2>
+            <button id="resumeButton">Resume</button>
+            <button id="restartButton">Restart</button>
         </div>
         
-        <!-- Settings Screen -->
         <div id="settingsScreen" class="screen">
-            <h1>Settings</h1>
+            <h2>Settings</h2>
             <div class="settings-group">
                 <label>
                     <input type="checkbox" id="soundToggle" checked>
@@ -61,93 +53,14 @@
                     Background Music
                 </label>
                 <label>
-                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
                     Volume
-                </label>
-                <label>
-                    <input type="checkbox" id="adaptiveDifficultyToggle" checked>
-                    Adaptive Difficulty
-                </label>
-                <label>
-                    <input type="checkbox" id="timeWarpToggle" checked>
-                    Time Warp Effects
+                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
                 </label>
             </div>
-            <button id="backBtn">Back</button>
-        </div>
-        
-        <!-- High Scores Screen -->
-        <div id="highScoresScreen" class="screen">
-            <h1>High Scores</h1>
-            <div class="high-scores-container">
-                <div class="high-scores-tabs">
-                    <button class="tab-button active" data-mode="classic">Classic</button>
-                    <button class="tab-button" data-mode="endless">Endless</button>
-                    <button class="tab-button" data-mode="boss">Boss Battle</button>
-                </div>
-                <div class="high-scores-list">
-                    <!-- High scores will be populated here -->
-                </div>
-            </div>
-            <button id="highScoresBackBtn">Back</button>
-        </div>
-        
-        <!-- Game Over Screen -->
-        <div id="gameOverScreen" class="screen">
-            <h1>Game Over</h1>
-            <div class="final-score">
-                <p>Your Score: <span id="finalScore">0</span></p>
-                <p>High Score: <span id="highScore">0</span></p>
-            </div>
-            <div class="name-input" id="nameInputContainer">
-                <input type="text" id="playerName" placeholder="Enter your name" maxlength="3">
-                <button id="submitScoreBtn">Submit Score</button>
-            </div>
-            <button id="playAgainBtn">Play Again</button>
-            <button id="mainMenuBtn">Main Menu</button>
-        </div>
-        
-        <!-- Debug Panel -->
-        <div id="debugPanel" class="hidden">
-            <div class="debug-info">
-                <p>FPS: <span id="fpsCounter">0</span></p>
-                <p>Game Mode: <span id="gameModeDisplay">classic</span></p>
-                <p>AI Personality: <span id="aiPersonalityDisplay">Aggressive</span></p>
-                <p>Ball Speed: <span id="ballSpeedDisplay">5</span></p>
-            </div>
+            <button id="closeSettingsButton">Close</button>
         </div>
     </div>
     
-    <!-- Audio elements -->
-    <audio id="bgMusic" loop>
-        <source src="audio/background.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="paddleHitSound">
-        <source src="audio/paddle-hit.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="wallHitSound">
-        <source src="audio/wall-hit.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="scoreSound">
-        <source src="audio/score.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="powerUpSound">
-        <source src="audio/power-up.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="memeSound">
-        <source src="audio/meme.mp3" type="audio/mpeg">
-    </audio>
-    
-    <!-- QR Code Modal -->
-    <div id="qrModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>Scan to Play</h2>
-            <div id="qrCode"></div>
-            <p>Scan this QR code to play on your mobile device</p>
-        </div>
-    </div>
-    
-    <script src="game.js"></script>
+    <script src="game-simple.js"></script>
 </body>
 </html> 

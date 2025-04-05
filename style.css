@@ -1,11 +1,199 @@
-body {
+* {
     margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #1a1a1a;
+    color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: #1a1a1a;
-    font-family: 'Arial', sans-serif;
+}
+
+#gameContainer {
+    position: relative;
+    width: 800px;
+    height: 400px;
+    background-color: #000000;
+    border: 2px solid #333333;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+#scoreDisplay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 32px;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+#themeSelector {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.theme-button {
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333333;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.theme-button:hover {
+    background-color: #444444;
+}
+
+.theme-button.active {
+    background-color: #666666;
+}
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1;
+}
+
+.screen h1, .screen h2 {
+    margin-bottom: 20px;
+    font-size: 48px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.screen button {
+    margin: 10px;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333333;
+    color: #ffffff;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.screen button:hover {
+    background-color: #444444;
+}
+
+.game-modes, .difficulty {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.game-mode-button, .difficulty-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333333;
+    color: #ffffff;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.game-mode-button:hover, .difficulty-button:hover {
+    background-color: #444444;
+}
+
+.game-mode-button.active, .difficulty-button.active {
+    background-color: #666666;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.settings-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-group input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.settings-group input[type="range"] {
+    width: 200px;
+}
+
+/* Theme-specific styles */
+.retro #gameContainer {
+    background-color: #000000;
+}
+
+.retro .theme-button.active {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.neon #gameContainer {
+    background-color: #000000;
+}
+
+.neon .theme-button.active {
+    background-color: #00ffff;
+    color: #000000;
+}
+
+.minimal #gameContainer {
+    background-color: #ffffff;
+}
+
+.minimal .theme-button.active {
+    background-color: #000000;
+    color: #ffffff;
+}
+
+/* Responsive design */
+@media (max-width: 800px) {
+    #gameContainer {
+        width: 100%;
+        height: 100vh;
+        border: none;
+    }
+    
+    .screen h1 {
+        font-size: 36px;
+    }
+    
+    .screen h2 {
+        font-size: 24px;
+    }
+    
+    .game-modes, .difficulty {
+        flex-direction: column;
+    }
 }
 
 .game-container {
@@ -509,4 +697,310 @@ button:focus, input:focus {
 
 .theme-minimalist .combo-text {
     text-shadow: none;
+}
+
+/* Event Notifications */
+.event-notification {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 15px 30px;
+    border-radius: 5px;
+    font-size: 24px;
+    font-weight: bold;
+    text-transform: uppercase;
+    animation: eventPop 0.5s ease-out;
+    z-index: 1000;
+}
+
+@keyframes eventPop {
+    0% { transform: translateX(-50%) scale(0); opacity: 0; }
+    50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1); opacity: 1; }
+}
+
+/* Commentator Text */
+.commentator-text {
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 20px;
+    font-weight: bold;
+    animation: commentSlide 0.5s ease-out;
+    z-index: 1000;
+}
+
+@keyframes commentSlide {
+    0% { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* Round Display */
+.round-display {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-size: 36px;
+    font-weight: bold;
+    animation: roundPop 0.5s ease-out;
+    z-index: 1000;
+}
+
+@keyframes roundPop {
+    0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+    50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+}
+
+/* Sudden Death Notification */
+.sudden-death-notification {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 0, 0, 0.8);
+    color: #fff;
+    padding: 20px 40px;
+    border-radius: 10px;
+    font-size: 36px;
+    font-weight: bold;
+    text-transform: uppercase;
+    animation: suddenDeath 1s ease-in-out infinite;
+    z-index: 1000;
+}
+
+@keyframes suddenDeath {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Teleport Zones */
+.teleport-zone {
+    position: absolute;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    animation: teleportPulse 2s infinite;
+}
+
+@keyframes teleportPulse {
+    0% { border-color: rgba(255, 255, 255, 0.5); }
+    50% { border-color: rgba(255, 255, 255, 1); }
+    100% { border-color: rgba(255, 255, 255, 0.5); }
+}
+
+/* Skill Tree */
+.skill-tree {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    color: #fff;
+    z-index: 1000;
+}
+
+.skill-node {
+    display: inline-block;
+    width: 60px;
+    height: 60px;
+    margin: 10px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 60px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.skill-node:hover {
+    transform: scale(1.1);
+}
+
+.skill-node.active {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+/* Daily Challenge */
+.daily-challenge {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+    color: #fff;
+    z-index: 1000;
+}
+
+.challenge-progress {
+    height: 5px;
+    background: rgba(255, 255, 255, 0.2);
+    margin-top: 5px;
+    border-radius: 2px;
+}
+
+.challenge-progress-bar {
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Avatar Display */
+.player-avatar {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
+
+/* Seasonal Effects */
+.snowflake {
+    position: absolute;
+    color: white;
+    pointer-events: none;
+    animation: snowFall linear infinite;
+}
+
+@keyframes snowFall {
+    0% { transform: translateY(-10px) rotate(0deg); }
+    100% { transform: translateY(100vh) rotate(360deg); }
+}
+
+/* Screen Flip Effect */
+.screen-flip {
+    transform: rotate(180deg);
+    transition: transform 0.5s ease;
+}
+
+/* Invisible Ball Effect */
+.ball-trail {
+    position: absolute;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 0.5; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* Shield Effect */
+.shield {
+    position: absolute;
+    width: 20px;
+    height: 100%;
+    background: rgba(0, 255, 0, 0.3);
+    animation: shieldPulse 1s infinite;
+}
+
+@keyframes shieldPulse {
+    0% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+    100% { opacity: 0.3; }
+}
+
+/* Magnet Effect */
+.magnet-field {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px dashed rgba(255, 255, 255, 0.5);
+    animation: magnetPulse 2s infinite;
+}
+
+@keyframes magnetPulse {
+    0% { transform: scale(1); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 0.5; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .event-notification {
+        font-size: 18px;
+        padding: 10px 20px;
+    }
+    
+    .commentator-text {
+        font-size: 16px;
+        padding: 8px 16px;
+    }
+    
+    .round-display {
+        font-size: 24px;
+        padding: 15px 30px;
+    }
+    
+    .sudden-death-notification {
+        font-size: 24px;
+        padding: 15px 30px;
+    }
+    
+    .skill-tree {
+        width: 90%;
+        max-width: 400px;
+    }
+    
+    .skill-node {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        font-size: 12px;
+    }
+}
+
+/* Accessibility */
+.screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Performance Optimizations */
+.will-change {
+    will-change: transform, opacity;
+}
+
+/* Theme-specific Effects */
+.theme-retro .event-notification {
+    font-family: 'Press Start 2P', cursive;
+    text-shadow: 2px 2px 0 #000;
+}
+
+.theme-neon .event-notification {
+    text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff;
+}
+
+.theme-minimalist .event-notification {
+    font-weight: 300;
+    letter-spacing: 2px;
 } 

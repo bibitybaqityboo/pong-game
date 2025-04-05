@@ -1,3 +1,4 @@
+// Canvas setup
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startScreen = document.getElementById('startScreen');
@@ -15,11 +16,49 @@ canvas.height = 400;
 let gameStarted = false;
 let gamePaused = false;
 let difficulty = 'medium';
-let gameMode = 'single'; // 'single' or 'two'
-let speedMultiplier = 1.0;
+let gameMode = 'single'; // 'single' or 'multiplayer'
+let speedMultiplier = 1;
 let lastSpeedIncrease = 0;
 const SPEED_INCREASE_INTERVAL = 10000; // Increase speed every 10 seconds
 const MAX_SPEED_MULTIPLIER = 2.0; // Maximum speed multiplier
+let isPaused = false;
+let gameOver = false;
+let roundTimer = 30; // 30 seconds per round
+let currentRound = 1;
+let maxRounds = 3;
+let isSuddenDeath = false;
+let lastPositions = []; // Store last positions for replay
+let replayMode = false;
+let replayIndex = 0;
+let xp = 0;
+let level = 1;
+let skillPoints = 0;
+let activeSkills = [];
+let dailyChallenge = null;
+let eventWheel = [];
+let currentEvent = null;
+let eventTimer = 0;
+let screenFlipTimer = 0;
+let invisibleBallTimer = 0;
+let teleportZones = [];
+let magnetPaddles = { left: false, right: false };
+let shields = { left: false, right: false };
+let clonedBalls = [];
+let backgroundEffects = {
+    shake: false,
+    pulse: false,
+    colorShift: false
+};
+let commentator = {
+    lastComment: 0,
+    cooldown: 2000,
+    phrases: [
+        { text: "UNSTOPPABLE!", trigger: "combo" },
+        { text: "What a save!", trigger: "save" },
+        { text: "Incredible rally!", trigger: "longRally" },
+        { text: "Perfect aim!", trigger: "perfectHit" }
+    ]
+};
 
 // Power-up system
 const powerUps = {
@@ -36,55 +75,78 @@ const MAX_BALLS = 3;
 let lastBallSpawn = 0;
 const BALL_SPAWN_INTERVAL = 30000; // Spawn new ball every 30 seconds
 
-// Visual effects
+// Particle system
 const particles = [];
-const MAX_PARTICLES = 50;
+const PARTICLE_COUNT = 10;
+const PARTICLE_LIFETIME = 20;
+
+class Particle {
+    constructor(x, y, color) {
+        this.x = x;
+        this.y = y;
+        this.color = color;
+        this.lifetime = PARTICLE_LIFETIME;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 5 + 2;
+        this.dx = Math.cos(angle) * speed;
+        this.dy = Math.sin(angle) * speed;
+        this.size = Math.random() * 3 + 2;
+    }
+
+    update() {
+        this.x += this.dx;
+        this.y += this.dy;
+        this.lifetime--;
+        this.size *= 0.95;
+    }
+
+    draw(ctx) {
+        ctx.fillStyle = `${this.color}${Math.floor(this.lifetime * 255 / PARTICLE_LIFETIME).toString(16).padStart(2, '0')}`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
 
 // Theme system
 const themes = {
     retro: {
         colors: {
             background: '#000000',
-            paddle: '#ffffff',
-            ball: '#ffffff',
-            powerUp: '#ff0000',
-            particle: '#ffff00'
+            paddle: '#FFFFFF',
+            ball: '#FFFFFF'
         },
         sounds: {
-            paddleHit: '8bit-paddle.mp3',
-            wallHit: '8bit-wall.mp3',
-            score: '8bit-score.mp3',
-            powerUp: '8bit-powerup.mp3'
+            paddle: 'audio/8bit-paddle.mp3',
+            wall: 'audio/8bit-wall.mp3',
+            score: 'audio/8bit-score.mp3',
+            background: 'audio/background.mp3'
         }
     },
     neon: {
         colors: {
-            background: '#0a0a2a',
-            paddle: '#00ffff',
-            ball: '#ff00ff',
-            powerUp: '#ffff00',
-            particle: '#00ff00'
+            background: '#000000',
+            paddle: '#00FFFF',
+            ball: '#FF00FF'
         },
         sounds: {
-            paddleHit: 'synth-paddle.mp3',
-            wallHit: 'synth-wall.mp3',
-            score: 'synth-score.mp3',
-            powerUp: 'synth-powerup.mp3'
+            paddle: 'audio/synth-paddle.mp3',
+            wall: 'audio/synth-wall.mp3',
+            score: 'audio/synth-score.mp3',
+            background: 'audio/background.mp3'
         }
     },
     minimalist: {
         colors: {
-            background: '#ffffff',
+            background: '#FFFFFF',
             paddle: '#000000',
-            ball: '#000000',
-            powerUp: '#666666',
-            particle: '#999999'
+            ball: '#000000'
         },
         sounds: {
-            paddleHit: 'minimal-paddle.mp3',
-            wallHit: 'minimal-wall.mp3',
-            score: 'minimal-score.mp3',
-            powerUp: 'minimal-powerup.mp3'
+            paddle: 'audio/minimal-paddle.mp3',
+            wall: 'audio/minimal-wall.mp3',
+            score: 'audio/minimal-score.mp3',
+            background: 'audio/background.mp3'
         }
     }
 };
@@ -169,56 +231,258 @@ const debug = {
     showState: false
 };
 
-// Initialize game objects with new properties
+// Game objects
 const ball = {
-    x: 0,
-    y: 0,
+    x: canvas.width / 2,
+    y: canvas.height / 2,
     radius: 10,
     dx: 5,
     dy: 5,
-    baseSpeed: 5,
-    spin: 0,
-    wobble: 0,
-    wobbleSpeed: 0,
-    lastHitPaddle: null
+    speed: 5
 };
 
-const player1 = {
+const leftPaddle = {
+    x: 10,
+    y: canvas.height / 2 - 50,
     width: 10,
     height: 100,
-    x: 0,
-    y: 0,
+    dy: 0,
     speed: 8,
-    score: 0,
-    moving: null,
-    powerUps: [],
-    aimAngle: 0,
-    maxAimAngle: 45,
-    comboStreak: 0
+    score: 0
 };
 
-const player2 = {
+const rightPaddle = {
+    x: canvas.width - 20,
+    y: canvas.height / 2 - 50,
     width: 10,
     height: 100,
-    x: 0,
-    y: 0,
+    dy: 0,
     speed: 8,
-    score: 0,
-    moving: null,
-    powerUps: [],
-    aimAngle: 0,
-    maxAimAngle: 45,
-    comboStreak: 0,
-    personality: aiPersonalities.aggressive
+    score: 0
 };
 
-// Progress bar
-const progressBar = {
-    width: 200,
-    height: 10,
-    x: 0,
-    y: 0
-};
+// Initialize game
+function initGame() {
+    // Reset game state
+    gameStarted = false;
+    isPaused = false;
+    leftPaddle.score = 0;
+    rightPaddle.score = 0;
+    
+    // Reset positions
+    resetBall();
+    resetPaddles();
+    
+    // Setup controls
+    setupKeyboardControls();
+    setupEventListeners();
+    
+    // Start game loop
+    requestAnimationFrame(gameLoop);
+}
+
+// Reset ball position
+function resetBall() {
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+    ball.dx = ball.speed * (Math.random() > 0.5 ? 1 : -1);
+    ball.dy = ball.speed * (Math.random() > 0.5 ? 1 : -1);
+}
+
+// Reset paddle positions
+function resetPaddles() {
+    leftPaddle.y = canvas.height / 2 - leftPaddle.height / 2;
+    rightPaddle.y = canvas.height / 2 - rightPaddle.height / 2;
+}
+
+// Setup event listeners
+function setupEventListeners() {
+    // Start game button
+    const startButton = document.getElementById('startButton');
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            gameStarted = true;
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+        });
+    }
+
+    // Settings button
+    const settingsButton = document.getElementById('settingsButton');
+    if (settingsButton) {
+        settingsButton.addEventListener('click', () => {
+            document.getElementById('settingsScreen').style.display = 'flex';
+        });
+    }
+
+    // Close settings button
+    const closeSettingsButton = document.getElementById('closeSettingsButton');
+    if (closeSettingsButton) {
+        closeSettingsButton.addEventListener('click', () => {
+            document.getElementById('settingsScreen').style.display = 'none';
+        });
+    }
+
+    // Resume button
+    const resumeButton = document.getElementById('resumeButton');
+    if (resumeButton) {
+        resumeButton.addEventListener('click', () => {
+            togglePause();
+        });
+    }
+
+    // Restart button
+    const restartButton = document.getElementById('restartButton');
+    if (restartButton) {
+        restartButton.addEventListener('click', () => {
+            leftPaddle.score = 0;
+            rightPaddle.score = 0;
+            document.getElementById('leftScore').textContent = '0';
+            document.getElementById('rightScore').textContent = '0';
+            resetBall();
+            resetPaddles();
+            togglePause();
+        });
+    }
+
+    // Game mode buttons
+    const gameModeButtons = document.querySelectorAll('.game-mode-button');
+    gameModeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            gameMode = button.dataset.mode;
+            gameModeButtons.forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+        });
+    });
+
+    // Difficulty buttons
+    const difficultyButtons = document.querySelectorAll('.difficulty-button');
+    difficultyButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            difficulty = button.dataset.difficulty;
+            difficultyButtons.forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+        });
+    });
+
+    // Theme buttons
+    const themeButtons = document.querySelectorAll('.theme-button');
+    themeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            currentTheme = button.dataset.theme;
+            themeButtons.forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            loadThemeSounds();
+        });
+    });
+
+    // Sound toggle
+    const soundToggle = document.getElementById('soundToggle');
+    if (soundToggle) {
+        soundToggle.addEventListener('change', (e) => {
+            const volume = e.target.checked ? 1 : 0;
+            if (paddleHitSound) paddleHitSound.volume = volume;
+            if (wallHitSound) wallHitSound.volume = volume;
+            if (scoreSound) scoreSound.volume = volume;
+        });
+    }
+
+    // Music toggle
+    const musicToggle = document.getElementById('musicToggle');
+    if (musicToggle) {
+        musicToggle.addEventListener('change', (e) => {
+            if (backgroundMusic) {
+                backgroundMusic.volume = e.target.checked ? 0.5 : 0;
+                if (e.target.checked && backgroundMusic.paused) {
+                    backgroundMusic.play();
+                }
+            }
+        });
+    }
+
+    // Volume slider
+    const volumeSlider = document.getElementById('volumeSlider');
+    if (volumeSlider) {
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            if (paddleHitSound) paddleHitSound.volume = volume;
+            if (wallHitSound) wallHitSound.volume = volume;
+            if (scoreSound) scoreSound.volume = volume;
+            if (backgroundMusic) backgroundMusic.volume = volume * 0.5;
+        });
+    }
+}
+
+// Setup keyboard controls
+function setupKeyboardControls() {
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp') {
+            leftPaddle.dy = -leftPaddle.speed;
+        } else if (e.key === 'ArrowDown') {
+            leftPaddle.dy = leftPaddle.speed;
+        } else if (e.key === 'w' && gameMode === 'multiplayer') {
+            rightPaddle.dy = -rightPaddle.speed;
+        } else if (e.key === 's' && gameMode === 'multiplayer') {
+            rightPaddle.dy = rightPaddle.speed;
+        } else if (e.key === ' ') {
+            togglePause();
+        }
+    });
+
+    document.addEventListener('keyup', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            leftPaddle.dy = 0;
+        } else if ((e.key === 'w' || e.key === 's') && gameMode === 'multiplayer') {
+            rightPaddle.dy = 0;
+        }
+    });
+}
+
+// Load theme sounds
+function loadThemeSounds() {
+    const theme = themes[currentTheme];
+    if (theme.sounds) {
+        paddleHitSound = new Audio(theme.sounds.paddle);
+        wallHitSound = new Audio(theme.sounds.wall);
+        scoreSound = new Audio(theme.sounds.score);
+        if (theme.sounds.background) {
+            backgroundMusic = new Audio(theme.sounds.background);
+            backgroundMusic.loop = true;
+        }
+    }
+}
+
+// Initialize new systems
+function initNewSystems() {
+    // Initialize teleport zones
+    teleportZones = [
+        { x: canvas.width * 0.25, y: canvas.height * 0.25, width: 50, height: 50, pair: 1 },
+        { x: canvas.width * 0.75, y: canvas.height * 0.25, width: 50, height: 50, pair: 1 },
+        { x: canvas.width * 0.25, y: canvas.height * 0.75, width: 50, height: 50, pair: 2 },
+        { x: canvas.width * 0.75, y: canvas.height * 0.75, width: 50, height: 50, pair: 2 }
+    ];
+
+    // Initialize event wheel
+    eventWheel = [
+        { name: "Giant Ball", duration: 10, effect: () => { ball.size = 20; } },
+        { name: "No Walls", duration: 15, effect: () => { ball.wallBounce = false; } },
+        { name: "Screen Flip", duration: 5, effect: () => { screenFlipTimer = 5; } },
+        { name: "Invisible Ball", duration: 3, effect: () => { invisibleBallTimer = 3; } }
+    ];
+
+    // Load daily challenge
+    loadDailyChallenge();
+}
+
+// Load daily challenge
+function loadDailyChallenge() {
+    const challenges = [
+        { name: "No Movement", description: "Win a rally without moving your paddle", reward: 100 },
+        { name: "Perfect Hits", description: "Score 3 points with perfect paddle hits", reward: 150 },
+        { name: "Long Rally", description: "Keep a rally going for 30 seconds", reward: 200 }
+    ];
+    dailyChallenge = challenges[Math.floor(Math.random() * challenges.length)];
+}
 
 // Initialize audio
 function initAudio() {
@@ -263,37 +527,6 @@ function initAudio() {
         console.warn('Web Audio API not supported');
     }
 }
-
-// Load theme-specific sounds
-function loadThemeSounds() {
-    const theme = themes[currentTheme];
-    const soundElements = {
-        paddleHit: document.getElementById('paddleHitSound'),
-        wallHit: document.getElementById('wallHitSound'),
-        score: document.getElementById('scoreSound'),
-        powerUp: document.getElementById('powerUpSound')
-    };
-    
-    Object.entries(theme.sounds).forEach(([type, file]) => {
-        soundElements[type].src = `audio/${file}`;
-        soundElements[type].load();
-    });
-}
-
-// Change theme
-function changeTheme(themeName) {
-    currentTheme = themeName;
-    document.body.className = `theme-${themeName}`;
-    loadThemeSounds();
-}
-
-// Theme button event listeners
-document.querySelectorAll('.theme-button').forEach(button => {
-    button.addEventListener('click', () => {
-        const themeName = button.classList[1].split('-')[1];
-        changeTheme(themeName);
-    });
-});
 
 // Spawn power-up
 function spawnPowerUp() {
@@ -348,8 +581,8 @@ function spawnNewBall() {
         x: canvas.width / 2,
         y: canvas.height / 2,
         radius: ball.radius,
-        dx: ball.baseSpeed * (Math.random() > 0.5 ? 1 : -1),
-        dy: ball.baseSpeed * (Math.random() > 0.5 ? 1 : -1),
+        dx: ball.speed * (Math.random() > 0.5 ? 1 : -1),
+        dy: ball.speed * (Math.random() > 0.5 ? 1 : -1),
         spin: 0
     };
     
@@ -359,28 +592,16 @@ function spawnNewBall() {
 
 // Create particle effect
 function createParticles(x, y, color) {
-    for (let i = 0; i < 10; i++) {
-        particles.push({
-            x,
-            y,
-            size: Math.random() * 3 + 1,
-            color: color || themes[currentTheme].colors.particle,
-            speedX: (Math.random() - 0.5) * 5,
-            speedY: (Math.random() - 0.5) * 5,
-            life: 1.0
-        });
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle(x, y, color));
     }
 }
 
 // Update particles
 function updateParticles() {
     for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.speedX;
-        p.y += p.speedY;
-        p.life -= 0.02;
-        
-        if (p.life <= 0) {
+        particles[i].update();
+        if (particles[i].lifetime <= 0) {
             particles.splice(i, 1);
         }
     }
@@ -388,14 +609,7 @@ function updateParticles() {
 
 // Draw particles
 function drawParticles() {
-    particles.forEach(p => {
-        ctx.globalAlpha = p.life;
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    ctx.globalAlpha = 1;
+    particles.forEach(particle => particle.draw(ctx));
 }
 
 // Time warp system
@@ -446,8 +660,8 @@ function updateAIPersonality() {
         
         // Visual indicator of personality change
         createParticles(
-            player2.x + player2.width / 2,
-            player2.y + player2.height / 2,
+            rightPaddle.x + rightPaddle.width / 2,
+            rightPaddle.y + rightPaddle.height / 2,
             themes[currentTheme].colors.particle
         );
     }
@@ -457,13 +671,13 @@ function updateAIPersonality() {
 function updateAdaptiveDifficulty() {
     if (!adaptiveDifficulty.enabled) return;
     
-    const scoreDiff = Math.abs(player1.score - player2.score);
+    const scoreDiff = Math.abs(leftPaddle.score - rightPaddle.score);
     if (scoreDiff >= adaptiveDifficulty.scoreDifferenceThreshold) {
-        const leadingPlayer = player1.score > player2.score ? player1 : player2;
-        const trailingPlayer = player1.score > player2.score ? player2 : player1;
+        const leadingPlayer = leftPaddle.score > rightPaddle.score ? leftPaddle : rightPaddle;
+        const trailingPlayer = leftPaddle.score > rightPaddle.score ? rightPaddle : leftPaddle;
         
         // Increase ball speed
-        ball.baseSpeed = Math.min(
+        ball.speed = Math.min(
             adaptiveDifficulty.maxSpeed,
             adaptiveDifficulty.baseSpeed + (scoreDiff * 0.5)
         );
@@ -490,7 +704,7 @@ function updateHighScores(score, name, mode) {
 // Theme unlocks
 function checkThemeUnlocks() {
     Object.entries(themeUnlocks).forEach(([theme, data]) => {
-        if (!data.unlocked && player1.score >= data.scoreRequired) {
+        if (!data.unlocked && leftPaddle.score >= data.scoreRequired) {
             data.unlocked = true;
             // Show unlock notification
             showNotification(`Unlocked ${theme} theme!`);
@@ -523,7 +737,7 @@ function drawDebugInfo() {
         `Game Mode: ${currentGameMode}`,
         `Combo: ${comboCounter}x${comboMultiplier}`,
         `AI Personality: ${currentAIPersonality.name}`,
-        `Ball Speed: ${ball.baseSpeed}`,
+        `Ball Speed: ${ball.speed}`,
         `Time Warp: ${timeWarpActive ? 'Active' : 'Inactive'}`
     ];
     
@@ -534,13 +748,75 @@ function drawDebugInfo() {
 
 // Update game state with new features
 function updateGameState() {
-    if (!gameStarted || gamePaused) return;
+    if (isPaused || !gameStarted) return;
     
+    // Update round timer
+    if (gameMode === 'timed') {
+        roundTimer -= 1/60;
+        if (roundTimer <= 0) {
+            endRound();
+        }
+    }
+
+    // Update sudden death
+    if (isSuddenDeath) {
+        ball.speed *= 1.1;
+        if (ball.speed > 20) ball.speed = 20;
+    }
+
+    // Update screen flip
+    if (screenFlipTimer > 0) {
+        screenFlipTimer -= 1/60;
+    }
+
+    // Update invisible ball
+    if (invisibleBallTimer > 0) {
+        invisibleBallTimer -= 1/60;
+    }
+
+    // Update magnet paddles
+    if (magnetPaddles.left || magnetPaddles.right) {
+        applyMagnetEffect();
+    }
+
+    // Update shields
+    if (shields.left || shields.right) {
+        updateShields();
+    }
+
+    // Update cloned balls
+    if (clonedBalls.length > 0) {
+        updateClonedBalls();
+    }
+
+    // Update background effects
+    updateBackgroundEffects();
+
+    // Update seasonal effects
+    if (seasonalEffects.active) {
+        updateSeasonalEffects();
+    }
+
+    // Update commentator
+    updateCommentator();
+
+    // Store positions for replay
+    if (!replayMode) {
+        lastPositions.push({
+            ball: { ...ball },
+            leftPaddle: { ...leftPaddle },
+            rightPaddle: { ...rightPaddle }
+        });
+        if (lastPositions.length > 300) { // Store 5 seconds at 60fps
+            lastPositions.shift();
+        }
+    }
+
     // Update debug info
     updateDebugInfo();
     
     // Check for time warp activation
-    if (Math.abs(ball.x - player1.x) < 50 || Math.abs(ball.x - player2.x) < 50) {
+    if (Math.abs(ball.x - leftPaddle.x) < 50 || Math.abs(ball.x - rightPaddle.x) < 50) {
         activateTimeWarp();
     }
     
@@ -566,42 +842,37 @@ function updateGameState() {
     // Check power-up collisions
     powerUps.active.forEach((powerUp, index) => {
         if (checkCollision(ball, powerUp)) {
-            applyPowerUp(player1, powerUp);
+            applyPowerUp(leftPaddle, powerUp);
             powerUps.active.splice(index, 1);
             createParticles(powerUp.x, powerUp.y, themes[currentTheme].colors.powerUp);
         }
     });
     
     // Update active power-ups
-    player1.powerUps.forEach((powerUp, index) => {
+    leftPaddle.powerUps.forEach((powerUp, index) => {
         if (Date.now() - powerUp.startTime > powerUps.duration) {
-            removePowerUp(player1, powerUp.type);
-            player1.powerUps.splice(index, 1);
+            removePowerUp(leftPaddle, powerUp.type);
+            leftPaddle.powerUps.splice(index, 1);
         }
     });
     
     // Update paddle positions with spin effect
-    if (player1.moving === 'up') {
-        player1.y -= player1.speed;
-        ball.spin = -1;
-    } else if (player1.moving === 'down') {
-        player1.y += player1.speed;
-        ball.spin = 1;
+    if (leftPaddle.dy !== 0) {
+        leftPaddle.y += leftPaddle.dy;
+        ball.spin = leftPaddle.dy > 0 ? -1 : 1;
     }
     
     if (gameMode === 'single') {
         updateAI();
-    } else if (player2.moving === 'up') {
-        player2.y -= player2.speed;
-    } else if (player2.moving === 'down') {
-        player2.y += player2.speed;
+    } else if (rightPaddle.dy !== 0) {
+        rightPaddle.y += rightPaddle.dy;
     }
     
     // Keep paddles within canvas bounds
-    if (player1.y < 0) player1.y = 0;
-    if (player1.y + player1.height > canvas.height) player1.y = canvas.height - player1.height;
-    if (player2.y < 0) player2.y = 0;
-    if (player2.y + player2.height > canvas.height) player2.y = canvas.height - player2.height;
+    if (leftPaddle.y < 0) leftPaddle.y = 0;
+    if (leftPaddle.y + leftPaddle.height > canvas.height) leftPaddle.y = canvas.height - leftPaddle.height;
+    if (rightPaddle.y < 0) rightPaddle.y = 0;
+    if (rightPaddle.y + rightPaddle.height > canvas.height) rightPaddle.y = canvas.height - rightPaddle.height;
     
     // Update all balls
     [ball, ...balls].forEach(b => {
@@ -622,36 +893,36 @@ function updateGameState() {
         
         // Ball collision with paddles
         if (b.dx < 0) {
-            if (b.x - b.radius < player1.x + player1.width &&
-                b.y > player1.y &&
-                b.y < player1.y + player1.height) {
+            if (b.x - b.radius < leftPaddle.x + leftPaddle.width &&
+                b.y > leftPaddle.y &&
+                b.y < leftPaddle.y + leftPaddle.height) {
                 b.dx = -b.dx;
-                b.spin = player1.moving ? (player1.moving === 'up' ? -1 : 1) : 0;
-                createParticles(b.x, b.y);
+                b.spin = leftPaddle.dy ? (leftPaddle.dy > 0 ? -1 : 1) : 0;
+                createParticles(b.x, b.y, themes[currentTheme].colors.paddle);
                 if (paddleHitSound) paddleHitSound.play();
             }
         } else {
-            if (b.x + b.radius > player2.x &&
-                b.y > player2.y &&
-                b.y < player2.y + player2.height) {
+            if (b.x + b.radius > rightPaddle.x &&
+                b.y > rightPaddle.y &&
+                b.y < rightPaddle.y + rightPaddle.height) {
                 b.dx = -b.dx;
-                b.spin = player2.moving ? (player2.moving === 'up' ? -1 : 1) : 0;
-                createParticles(b.x, b.y);
+                b.spin = rightPaddle.dy ? (rightPaddle.dy > 0 ? -1 : 1) : 0;
+                createParticles(b.x, b.y, themes[currentTheme].colors.paddle);
                 if (paddleHitSound) paddleHitSound.play();
             }
         }
         
         // Score points
         if (b.x - b.radius < 0) {
-            player2.score++;
+            rightPaddle.score++;
             createParticles(b.x, b.y);
             if (scoreSound) scoreSound.play();
-            resetBall(b);
+            resetBall();
         } else if (b.x + b.radius > canvas.width) {
-            player1.score++;
+            leftPaddle.score++;
             createParticles(b.x, b.y);
             if (scoreSound) scoreSound.play();
-            resetBall(b);
+            resetBall();
         }
     });
     
@@ -667,8 +938,8 @@ function updateGameState() {
 
 // Update progress bar
 function updateProgressBar() {
-    const totalScore = player1.score + player2.score;
-    const progress = player1.score / totalScore;
+    const totalScore = leftPaddle.score + rightPaddle.score;
+    const progress = leftPaddle.score / totalScore;
     progressBar.x = canvas.width / 2 - progressBar.width / 2;
     progressBar.y = canvas.height - 20;
     
@@ -682,50 +953,70 @@ function updateProgressBar() {
 // Update score display with animation
 function updateScoreDisplay() {
     const scoreElement = document.getElementById('score');
-    scoreElement.textContent = `${player1.score} - ${player2.score}`;
+    scoreElement.textContent = `${leftPaddle.score} - ${rightPaddle.score}`;
     scoreElement.classList.add('score-animation');
     setTimeout(() => scoreElement.classList.remove('score-animation'), 500);
 }
 
 // Draw game with new features
 function drawGame() {
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     // Draw background
     ctx.fillStyle = themes[currentTheme].colors.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
-    // Draw paddles
+
+    // Draw center line
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.strokeStyle = themes[currentTheme].colors.paddle;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw paddles with shadow effect
     ctx.fillStyle = themes[currentTheme].colors.paddle;
-    ctx.fillRect(player1.x, player1.y, player1.width, player1.height);
-    ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
-    
-    // Draw balls
+    ctx.shadowColor = themes[currentTheme].colors.paddle;
+    ctx.shadowBlur = 10;
+    ctx.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
+    ctx.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
+
+    // Draw ball with glow effect
     ctx.fillStyle = themes[currentTheme].colors.ball;
-    [ball, ...balls].forEach(b => {
-        ctx.beginPath();
-        ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
-        ctx.fill();
-    });
-    
-    // Draw power-ups
-    powerUps.active.forEach(powerUp => {
-        ctx.fillStyle = themes[currentTheme].colors.powerUp;
-        ctx.fillRect(powerUp.x, powerUp.y, powerUp.width, powerUp.height);
-    });
-    
+    ctx.shadowColor = themes[currentTheme].colors.ball;
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reset shadow
+    ctx.shadowBlur = 0;
+
+    // Draw score with glow effect
+    ctx.fillStyle = themes[currentTheme].colors.paddle;
+    ctx.shadowColor = themes[currentTheme].colors.paddle;
+    ctx.shadowBlur = 10;
+    ctx.font = '48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(leftPaddle.score, canvas.width / 4, 60);
+    ctx.fillText(rightPaddle.score, (canvas.width / 4) * 3, 60);
+
+    // Reset shadow
+    ctx.shadowBlur = 0;
+
+    // Draw game mode and difficulty if in single player
+    if (gameMode === 'single') {
+        ctx.font = '16px Arial';
+        ctx.fillText(`Mode: Single Player - ${difficulty.toUpperCase()}`, canvas.width / 2, 30);
+    } else {
+        ctx.font = '16px Arial';
+        ctx.fillText('Mode: Two Players', canvas.width / 2, 30);
+    }
+
     // Draw particles
     drawParticles();
     
     // Draw progress bar
     updateProgressBar();
-    
-    // Draw score
-    ctx.font = '32px Arial';
-    ctx.fillStyle = themes[currentTheme].colors.paddle;
-    ctx.textAlign = 'center';
-    ctx.fillText(`${player1.score} - ${player2.score}`, canvas.width / 2, 50);
     
     // Draw debug info
     drawDebugInfo();
@@ -745,190 +1036,556 @@ function drawGame() {
     }
 }
 
-// Initialize game with new features
+// Initialize game when window loads
 window.addEventListener('load', () => {
-    resizeCanvas();
     initGame();
     initAudio();
-    
-    // Load high scores
-    const savedScores = localStorage.getItem('pongHighScores');
-    if (savedScores) {
-        Object.assign(highScores, JSON.parse(savedScores));
+});
+
+// Apply magnet effect
+function applyMagnetEffect() {
+    if (magnetPaddles.left) {
+        const dx = leftPaddle.x - ball.x;
+        const dy = leftPaddle.y - ball.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 200) {
+            ball.dx -= dx * 0.1 / distance;
+            ball.dy -= dy * 0.1 / distance;
+        }
     }
+    if (magnetPaddles.right) {
+        const dx = rightPaddle.x - ball.x;
+        const dy = rightPaddle.y - ball.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < 200) {
+            ball.dx -= dx * 0.1 / distance;
+            ball.dy -= dy * 0.1 / distance;
+        }
+    }
+}
+
+// Update shields
+function updateShields() {
+    if (shields.left) {
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+        ctx.fillRect(0, 0, 20, canvas.height);
+    }
+    if (shields.right) {
+        ctx.fillStyle = 'rgba(0, 255, 0, 0.3)';
+        ctx.fillRect(canvas.width - 20, 0, 20, canvas.height);
+    }
+}
+
+// Update cloned balls
+function updateClonedBalls() {
+    clonedBalls.forEach((clone, index) => {
+        clone.x += clone.dx;
+        clone.y += clone.dy;
+        
+        // Bounce off walls
+        if (clone.y <= 0 || clone.y >= canvas.height) {
+            clone.dy = -clone.dy;
+        }
+        
+        // Check paddle collisions
+        if (clone.x <= leftPaddle.x + leftPaddle.width &&
+            clone.x >= leftPaddle.x &&
+            clone.y >= leftPaddle.y &&
+            clone.y <= leftPaddle.y + leftPaddle.height) {
+            clone.dx = -clone.dx;
+            clone.dx *= 1.1;
+        }
+        
+        if (clone.x >= rightPaddle.x &&
+            clone.x <= rightPaddle.x + rightPaddle.width &&
+            clone.y >= rightPaddle.y &&
+            clone.y <= rightPaddle.y + rightPaddle.height) {
+            clone.dx = -clone.dx;
+            clone.dx *= 1.1;
+        }
+        
+        // Draw cloned ball
+        ctx.beginPath();
+        ctx.arc(clone.x, clone.y, clone.size, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+        ctx.fill();
+        ctx.closePath();
+    });
+}
+
+// Update background effects
+function updateBackgroundEffects() {
+    if (backgroundEffects.shake) {
+        canvas.style.transform = `translate(${Math.random() * 10 - 5}px, ${Math.random() * 10 - 5}px)`;
+    }
+    if (backgroundEffects.pulse) {
+        const pulse = Math.sin(Date.now() / 200) * 0.1 + 1;
+        canvas.style.transform = `scale(${pulse})`;
+    }
+    if (backgroundEffects.colorShift) {
+        const hue = (Date.now() / 1000) % 360;
+        document.body.style.backgroundColor = `hsl(${hue}, 50%, 20%)`;
+    }
+}
+
+// Update seasonal effects
+function updateSeasonalEffects() {
+    if (seasonalEffects.type === 'winter') {
+        // Add snowflakes
+        if (Math.random() < 0.1) {
+            seasonalEffects.particles.push({
+                x: Math.random() * canvas.width,
+                y: 0,
+                size: Math.random() * 3 + 1,
+                speed: Math.random() * 2 + 1
+            });
+        }
+        
+        seasonalEffects.particles.forEach((flake, index) => {
+            flake.y += flake.speed;
+            ctx.beginPath();
+            ctx.arc(flake.x, flake.y, flake.size, 0, Math.PI * 2);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            
+            if (flake.y > canvas.height) {
+                seasonalEffects.particles.splice(index, 1);
+            }
+        });
+    }
+    // Add other seasonal effects here
+}
+
+// Update commentator
+function updateCommentator() {
+    const now = Date.now();
+    if (now - commentator.lastComment > commentator.cooldown) {
+        const phrase = commentator.phrases[Math.floor(Math.random() * commentator.phrases.length)];
+        if (checkCommentTrigger(phrase.trigger)) {
+            showComment(phrase.text);
+            commentator.lastComment = now;
+        }
+    }
+}
+
+// Check comment trigger conditions
+function checkCommentTrigger(trigger) {
+    switch (trigger) {
+        case 'combo':
+            return comboCounter > 3;
+        case 'save':
+            return lastSaveTime > Date.now() - 1000;
+        case 'longRally':
+            return rallyTime > 5;
+        case 'perfectHit':
+            return lastHitPerfect;
+        default:
+            return false;
+    }
+}
+
+// Show commentator text
+function showComment(text) {
+    const comment = document.createElement('div');
+    comment.className = 'commentator-text';
+    comment.textContent = text;
+    document.body.appendChild(comment);
     
-    // Initialize debug system
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'F3') {
-            debug.enabled = !debug.enabled;
+    setTimeout(() => {
+        comment.remove();
+    }, 2000);
+}
+
+// Handle screen flip
+function handleScreenFlip() {
+    if (screenFlipTimer > 0) {
+        ctx.save();
+        ctx.translate(canvas.width/2, canvas.height/2);
+        ctx.rotate(Math.PI);
+        ctx.translate(-canvas.width/2, -canvas.height/2);
+    }
+}
+
+// Handle teleport zones
+function handleTeleportZones() {
+    teleportZones.forEach(zone => {
+        if (ball.x > zone.x && ball.x < zone.x + zone.width &&
+            ball.y > zone.y && ball.y < zone.y + zone.height) {
+            const pair = teleportZones.find(z => z.pair === zone.pair && z !== zone);
+            if (pair) {
+                ball.x = pair.x + pair.width/2;
+                ball.y = pair.y + pair.height/2;
+                createParticles(ball.x, ball.y, 20, 'teleport');
+            }
         }
     });
-});
+}
 
-// Event Listeners
-document.querySelectorAll('.difficulty-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        difficulty = button.dataset.difficulty;
-        startGame();
-    });
-});
-
-document.addEventListener('keydown', handleKeyDown);
-document.addEventListener('keyup', handleKeyUp);
-
-// Mobile touch controls
-canvas.addEventListener('touchstart', handleTouch);
-canvas.addEventListener('touchend', () => paddle.moving = null);
-
-pauseBtn.addEventListener('click', togglePause);
-
-// Handle keyboard controls
-function handleKeyDown(e) {
-    if (e.key === 'ArrowUp') {
-        paddle.moving = 'up';
-    } else if (e.key === 'ArrowDown') {
-        paddle.moving = 'down';
-    } else if (e.key === ' ') { // Spacebar
-        togglePause();
+// Handle ball size variation
+function handleBallSizeVariation() {
+    if (Math.random() < 0.001) { // 0.1% chance per frame
+        ball.size = Math.random() * 10 + 5;
+        createParticles(ball.x, ball.y, 10, 'sizeChange');
     }
 }
 
-function handleKeyUp(e) {
-    if ((e.key === 'ArrowUp' && paddle.moving === 'up') ||
-        (e.key === 'ArrowDown' && paddle.moving === 'down')) {
-        paddle.moving = null;
-    }
-}
-
-// Handle touch controls
-function handleTouch(e) {
-    e.preventDefault();
-    const touch = e.touches[0];
-    const rect = canvas.getBoundingClientRect();
-    const relativeY = touch.clientY - rect.top;
-    
-    if (relativeY < rect.height / 2) {
-        paddle.moving = 'up';
+// Handle invisible ball
+function handleInvisibleBall() {
+    if (invisibleBallTimer > 0) {
+        ball.visible = false;
     } else {
-        paddle.moving = 'down';
+        ball.visible = true;
     }
 }
 
+// Handle skill effects
+function applySkillEffects() {
+    // Ball curve
+    if (skillTree.ballCurve.level > 0) {
+        ball.dy += Math.sin(Date.now() / 500) * 0.1 * skillTree.ballCurve.level;
+    }
+    
+    // Mid-air deflect
+    if (skillTree.midAirDeflect.level > 0 && Math.random() < skillTree.midAirDeflect.chance) {
+        ball.dx = -ball.dx;
+        createParticles(ball.x, ball.y, 10, 'deflect');
+    }
+    
+    // Paddle speed
+    if (skillTree.paddleSpeed.level > 0) {
+        rightPaddle.speed *= (1 + skillTree.paddleSpeed.effect * skillTree.paddleSpeed.level);
+    }
+    
+    // Ball speed
+    if (skillTree.ballSpeed.level > 0) {
+        ball.speed *= (1 + skillTree.ballSpeed.effect * skillTree.ballSpeed.level);
+    }
+}
+
+// Handle event wheel
+function spinEventWheel() {
+    if (eventWheel.length > 0) {
+        const event = eventWheel[Math.floor(Math.random() * eventWheel.length)];
+        currentEvent = event;
+        event.effect();
+        eventTimer = event.duration;
+        
+        showEventNotification(event.name);
+    }
+}
+
+// Show event notification
+function showEventNotification(eventName) {
+    const notification = document.createElement('div');
+    notification.className = 'event-notification';
+    notification.textContent = `EVENT: ${eventName}`;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Handle replay
+function startReplay() {
+    if (lastPositions.length > 0) {
+        replayMode = true;
+        replayIndex = 0;
+        gameStarted = false;
+        isPaused = false;
+    }
+}
+
+// Update replay
+function updateReplay() {
+    if (replayMode && replayIndex < lastPositions.length) {
+        const state = lastPositions[replayIndex];
+        ball = { ...state.ball };
+        leftPaddle = { ...state.leftPaddle };
+        rightPaddle = { ...state.rightPaddle };
+        replayIndex++;
+        
+        if (replayIndex >= lastPositions.length) {
+            replayMode = false;
+            gameStarted = false;
+        }
+    }
+}
+
+// End round
+function endRound() {
+    if (currentRound < maxRounds) {
+        currentRound++;
+        roundTimer = 30;
+        resetBall();
+        isPaused = true;
+        showRoundStart();
+    } else {
+        endGame();
+    }
+}
+
+// Show round start
+function showRoundStart() {
+    const roundDisplay = document.createElement('div');
+    roundDisplay.className = 'round-display';
+    roundDisplay.textContent = `Round ${currentRound}`;
+    document.body.appendChild(roundDisplay);
+    
+    setTimeout(() => {
+        roundDisplay.remove();
+        isPaused = false;
+    }, 2000);
+}
+
+// Handle sudden death
+function checkSuddenDeath() {
+    if (leftPaddle.score >= 10 && rightPaddle.score >= 10) {
+        isSuddenDeath = true;
+        ball.speed *= 1.5;
+        showSuddenDeathNotification();
+    }
+}
+
+// Show sudden death notification
+function showSuddenDeathNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'sudden-death-notification';
+    notification.textContent = 'SUDDEN DEATH!';
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// AI control for right paddle
+function updateAI() {
+    if (gameMode === 'single') {
+        const paddleCenter = rightPaddle.y + rightPaddle.height / 2;
+        const ballCenter = ball.y;
+        const difficultyFactor = difficulty === 'easy' ? 0.5 : difficulty === 'medium' ? 0.7 : 0.9;
+        
+        if (paddleCenter < ballCenter - 10) {
+            rightPaddle.dy = rightPaddle.speed * difficultyFactor;
+        } else if (paddleCenter > ballCenter + 10) {
+            rightPaddle.dy = -rightPaddle.speed * difficultyFactor;
+        } else {
+            rightPaddle.dy = 0;
+        }
+    }
+}
+
+// Toggle pause
 function togglePause() {
-    if (!gameStarted) return;
-    
-    gamePaused = !gamePaused;
-    pauseScreen.classList.toggle('hidden', !gamePaused);
-    
-    if (!gamePaused) {
-        requestAnimationFrame(gameLoop);
+    isPaused = !isPaused;
+    const pauseScreen = document.getElementById('pauseScreen');
+    if (pauseScreen) {
+        pauseScreen.style.display = isPaused ? 'flex' : 'none';
     }
-}
-
-function startGame() {
-    gameStarted = true;
-    startScreen.classList.add('hidden');
-    resetGame();
-    requestAnimationFrame(gameLoop);
-}
-
-function resetGame() {
-    // Reset ball position and direction
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.dx = difficulties[difficulty].ballSpeed * (Math.random() > 0.5 ? 1 : -1);
-    ball.dy = difficulties[difficulty].ballSpeed * (Math.random() * 2 - 1);
-    
-    // Reset paddle positions
-    paddle.y = canvas.height / 2 - paddle.height / 2;
-    computerPaddle.y = canvas.height / 2 - computerPaddle.height / 2;
-    
-    // Update computer paddle speed based on difficulty
-    computerPaddle.speed = difficulties[difficulty].computerSpeed;
-}
-
-function resetBall() {
-    ball.x = canvas.width / 2;
-    ball.y = canvas.height / 2;
-    ball.dx = difficulties[difficulty].ballSpeed * (Math.random() > 0.5 ? 1 : -1);
-    ball.dy = difficulties[difficulty].ballSpeed * (Math.random() * 2 - 1);
 }
 
 // Game loop
 function gameLoop() {
-    if (!gameStarted || gamePaused) return;
-    
+    if (!gameStarted || isPaused) {
+        requestAnimationFrame(gameLoop);
+        return;
+    }
+
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
+    // Update game state
+    updateGameState();
+    updateParticles();
+
+    // Draw game
+    drawGame();
+    drawBallTrail();
+    drawParticles();
+
+    // Continue game loop
+    requestAnimationFrame(gameLoop);
+}
+
+// Ball trail effect
+const ballTrail = [];
+const MAX_TRAIL_LENGTH = 5;
+
+// Update ball trail
+function updateBallTrail() {
+    ballTrail.push({ x: ball.x, y: ball.y });
+    if (ballTrail.length > MAX_TRAIL_LENGTH) {
+        ballTrail.shift();
+    }
+}
+
+// Draw ball trail
+function drawBallTrail() {
+    for (let i = 0; i < ballTrail.length; i++) {
+        const alpha = (i + 1) / ballTrail.length;
+        ctx.fillStyle = `rgba(${getRGBValues(themes[currentTheme].colors.ball)}, ${alpha * 0.3})`;
+        ctx.beginPath();
+        ctx.arc(ballTrail[i].x, ballTrail[i].y, ball.radius * (1 - i / ballTrail.length), 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Helper function to get RGB values from hex color
+function getRGBValues(hex) {
+    const r = parseInt(hex.substr(1, 2), 16);
+    const g = parseInt(hex.substr(3, 2), 16);
+    const b = parseInt(hex.substr(5, 2), 16);
+    return `${r}, ${g}, ${b}`;
+}
+
+// Update game state
+function updateGameState() {
     // Move paddles
-    if (paddle.moving === 'up' && paddle.y > 0) {
-        paddle.y -= paddle.speed;
-    } else if (paddle.moving === 'down' && paddle.y + paddle.height < canvas.height) {
-        paddle.y += paddle.speed;
+    leftPaddle.y += leftPaddle.dy;
+    rightPaddle.y += rightPaddle.dy;
+
+    // Keep paddles in bounds
+    if (leftPaddle.y < 0) leftPaddle.y = 0;
+    if (leftPaddle.y + leftPaddle.height > canvas.height) leftPaddle.y = canvas.height - leftPaddle.height;
+    if (rightPaddle.y < 0) rightPaddle.y = 0;
+    if (rightPaddle.y + rightPaddle.height > canvas.height) rightPaddle.y = canvas.height - rightPaddle.height;
+
+    // Update AI only in single player mode
+    if (gameMode === 'single') {
+        const paddleCenter = rightPaddle.y + rightPaddle.height / 2;
+        const ballCenter = ball.y;
+        const difficultyFactor = difficulty === 'easy' ? 0.5 : difficulty === 'medium' ? 0.7 : 0.9;
+        
+        if (paddleCenter < ballCenter - 10) {
+            rightPaddle.dy = rightPaddle.speed * difficultyFactor;
+        } else if (paddleCenter > ballCenter + 10) {
+            rightPaddle.dy = -rightPaddle.speed * difficultyFactor;
+        } else {
+            rightPaddle.dy = 0;
+        }
     }
-    
-    // Computer paddle AI
-    const paddleCenter = computerPaddle.y + computerPaddle.height / 2;
-    if (paddleCenter < ball.y - 35) {
-        computerPaddle.y += computerPaddle.speed;
-    }
-    if (paddleCenter > ball.y + 35) {
-        computerPaddle.y -= computerPaddle.speed;
-    }
-    
-    // Keep computer paddle in bounds
-    if (computerPaddle.y < 0) computerPaddle.y = 0;
-    if (computerPaddle.y + computerPaddle.height > canvas.height) {
-        computerPaddle.y = canvas.height - computerPaddle.height;
-    }
-    
+
     // Move ball
     ball.x += ball.dx;
     ball.y += ball.dy;
-    
+
+    // Update ball trail
+    updateBallTrail();
+
     // Ball collision with top and bottom
-    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+    if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
         ball.dy = -ball.dy;
-        wallHitSound.currentTime = 0;
-        wallHitSound.play();
+        if (wallHitSound) wallHitSound.play();
     }
-    
+
     // Ball collision with paddles
-    if (ball.x - ball.radius < paddle.x + paddle.width &&
-        ball.y > paddle.y &&
-        ball.y < paddle.y + paddle.height) {
-        ball.dx = -ball.dx;
-        paddleHitSound.currentTime = 0;
-        paddleHitSound.play();
+    if (ball.dx < 0) {
+        if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width &&
+            ball.y > leftPaddle.y &&
+            ball.y < leftPaddle.y + leftPaddle.height) {
+            ball.dx = -ball.dx;
+            if (paddleHitSound) paddleHitSound.play();
+            createParticles(ball.x, ball.y, themes[currentTheme].colors.paddle);
+        }
+    } else {
+        if (ball.x + ball.radius > rightPaddle.x &&
+            ball.y > rightPaddle.y &&
+            ball.y < rightPaddle.y + rightPaddle.height) {
+            ball.dx = -ball.dx;
+            if (paddleHitSound) paddleHitSound.play();
+            createParticles(ball.x, ball.y, themes[currentTheme].colors.paddle);
+        }
     }
-    
-    if (ball.x + ball.radius > computerPaddle.x &&
-        ball.y > computerPaddle.y &&
-        ball.y < computerPaddle.y + computerPaddle.height) {
-        ball.dx = -ball.dx;
-        paddleHitSound.currentTime = 0;
-        paddleHitSound.play();
-    }
-    
+
     // Score points
     if (ball.x - ball.radius < 0) {
-        computerScore++;
-        document.getElementById('computerScore').textContent = computerScore;
-        scoreSound.currentTime = 0;
-        scoreSound.play();
+        rightPaddle.score++;
+        document.getElementById('rightScore').textContent = rightPaddle.score;
+        if (scoreSound) scoreSound.play();
+        resetBall();
+    } else if (ball.x + ball.radius > canvas.width) {
+        leftPaddle.score++;
+        document.getElementById('leftScore').textContent = leftPaddle.score;
+        if (scoreSound) scoreSound.play();
         resetBall();
     }
-    if (ball.x + ball.radius > canvas.width) {
-        playerScore++;
-        document.getElementById('playerScore').textContent = playerScore;
-        scoreSound.currentTime = 0;
-        scoreSound.play();
-        resetBall();
+}
+
+// Draw game
+function drawGame() {
+    // Draw background
+    ctx.fillStyle = themes[currentTheme].colors.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Draw center line
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.strokeStyle = themes[currentTheme].colors.paddle;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Draw paddles with shadow effect
+    ctx.fillStyle = themes[currentTheme].colors.paddle;
+    ctx.shadowColor = themes[currentTheme].colors.paddle;
+    ctx.shadowBlur = 10;
+    ctx.fillRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height);
+    ctx.fillRect(rightPaddle.x, rightPaddle.y, rightPaddle.width, rightPaddle.height);
+
+    // Draw ball with glow effect
+    ctx.fillStyle = themes[currentTheme].colors.ball;
+    ctx.shadowColor = themes[currentTheme].colors.ball;
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Reset shadow
+    ctx.shadowBlur = 0;
+
+    // Draw score with glow effect
+    ctx.fillStyle = themes[currentTheme].colors.paddle;
+    ctx.shadowColor = themes[currentTheme].colors.paddle;
+    ctx.shadowBlur = 10;
+    ctx.font = '48px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(leftPaddle.score, canvas.width / 4, 60);
+    ctx.fillText(rightPaddle.score, (canvas.width / 4) * 3, 60);
+
+    // Reset shadow
+    ctx.shadowBlur = 0;
+
+    // Draw game mode and difficulty if in single player
+    if (gameMode === 'single') {
+        ctx.font = '16px Arial';
+        ctx.fillText(`Mode: Single Player - ${difficulty.toUpperCase()}`, canvas.width / 2, 30);
+    } else {
+        ctx.font = '16px Arial';
+        ctx.fillText('Mode: Two Players', canvas.width / 2, 30);
+    }
+
+    // Draw particles
+    drawParticles();
+    
+    // Draw progress bar
+    updateProgressBar();
+    
+    // Draw debug info
+    drawDebugInfo();
+    
+    // Draw combo multiplier
+    if (comboMultiplier > 1) {
+        ctx.fillStyle = themes[currentTheme].colors.powerUp;
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${comboMultiplier}x`, canvas.width / 2, 100);
     }
     
-    // Draw game objects
-    drawGame();
-    
-    requestAnimationFrame(gameLoop);
+    // Draw time warp effect
+    if (timeWarpActive) {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 } 
