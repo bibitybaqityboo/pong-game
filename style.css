@@ -8,6 +8,10 @@ body {
     background-color: #1a1a1a;
     font-family: 'Arial', sans-serif;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
 }
 
 .game-container {
@@ -17,6 +21,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 canvas {
@@ -25,18 +31,23 @@ canvas {
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     max-width: 100%;
     max-height: 100%;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 .score {
     position: absolute;
     top: 20px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) translateZ(0);
     color: #fff;
     font-size: 2em;
     font-weight: bold;
     text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     z-index: 1;
+    will-change: transform;
 }
 
 .overlay {
@@ -53,6 +64,8 @@ canvas {
     color: white;
     z-index: 2;
     backdrop-filter: blur(5px);
+    transform: translateZ(0);
+    will-change: transform;
 }
 
 .hidden {
@@ -205,23 +218,32 @@ canvas {
     .game-container {
         height: 100vh;
         padding: 0;
+        touch-action: none;
+    }
+    
+    canvas {
+        touch-action: none;
     }
     
     .overlay h1 {
         font-size: 3em;
+        transform: translateZ(0);
     }
     
     .overlay h2 {
         font-size: 2em;
+        transform: translateZ(0);
     }
     
     .overlay p {
         font-size: 1em;
+        transform: translateZ(0);
     }
     
     .difficulty-btn, .mode-btn, .settings-btn {
         padding: 12px 24px;
         font-size: 1em;
+        transform: translateZ(0);
     }
     
     .controls-info {
@@ -233,26 +255,31 @@ canvas {
         font-size: 1em;
         text-align: center;
         padding: 0 20px;
+        transform: translateZ(0);
     }
     
     .settings-group {
         width: 90%;
+        transform: translateZ(0);
     }
     
     .color-picker label, .sound-controls label, .game-settings label {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
+        transform: translateZ(0);
     }
     
     .fps-counter {
         font-size: 0.8em;
         padding: 5px 10px;
+        transform: translateZ(0);
     }
     
     .pause-button, .mute-button {
         font-size: 1.5em;
         padding: 10px;
+        transform: translateZ(0);
     }
 }
 
@@ -370,4 +397,19 @@ canvas {
 
 #resetSettings:hover {
     background-color: #ff6666;
+}
+
+/* Performance optimizations */
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+}
+
+button, input {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    outline: none;
 } 

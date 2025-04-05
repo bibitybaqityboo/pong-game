@@ -86,10 +86,16 @@ let settings = {
 let audioContext;
 let sfxGain;
 
-// FPS counter
+// FPS counter and timing
 let fps = 0;
 let lastTime = performance.now();
-const fpsCounter = document.getElementById('fpsCounter');
+let frameCount = 0;
+let lastFpsUpdate = performance.now();
+const fpsUpdateInterval = 1000; // Update FPS counter every second
+const targetFPS = 165;
+const frameTime = 1000 / targetFPS;
+let lastFrameTime = performance.now();
+let accumulatedTime = 0;
 
 // Initialize audio
 function initAudio() {
@@ -442,11 +448,14 @@ function updateFPS() {
     if (!settings.game.showFPS) return;
     
     const currentTime = performance.now();
-    const deltaTime = currentTime - lastTime;
-    lastTime = currentTime;
+    frameCount++;
     
-    fps = Math.round(1000 / deltaTime);
-    fpsCounter.textContent = `FPS: ${fps}`;
+    if (currentTime - lastFpsUpdate >= fpsUpdateInterval) {
+        fps = Math.round((frameCount * 1000) / (currentTime - lastFpsUpdate));
+        fpsCounter.textContent = `FPS: ${fps}`;
+        frameCount = 0;
+        lastFpsUpdate = currentTime;
+    }
     
     requestAnimationFrame(updateFPS);
 }
@@ -686,18 +695,42 @@ function updateAI() {
 }
 
 // Update game loop
-function gameLoop() {
+function gameLoop(timestamp) {
     if (!gameStarted || gamePaused) return;
     
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Calculate delta time
+    const currentTime = timestamp || performance.now();
+    const deltaTime = currentTime - lastFrameTime;
+    lastFrameTime = currentTime;
     
+    // Accumulate time
+    accumulatedTime += deltaTime;
+    
+    // Update game state at target FPS
+    while (accumulatedTime >= frameTime) {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Update game state
+        updateGameState();
+        
+        // Draw game
+        drawGame();
+        
+        accumulatedTime -= frameTime;
+    }
+    
+    // Update FPS counter
+    updateFPS();
+    
+    // Request next frame
+    requestAnimationFrame(gameLoop);
+}
+
+// Update game state
+function updateGameState() {
     // Update AI
     updateAI();
-    
-    // Set background color
-    ctx.fillStyle = settings.colors.background;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     // Move paddles
     if (player1.moving === 'up' && player1.y > 0) {
@@ -780,14 +813,14 @@ function gameLoop() {
         playScore();
         resetBall();
     }
-    
-    // Draw game objects
-    drawGame();
-    
-    requestAnimationFrame(gameLoop);
 }
 
+// Draw game
 function drawGame() {
+    // Set background color
+    ctx.fillStyle = settings.colors.background;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     // Draw ball
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
