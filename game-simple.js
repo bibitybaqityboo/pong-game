@@ -6,16 +6,19 @@ const ctx = canvas.getContext('2d');
 let gameStarted = false;
 let isPaused = false;
 let gameMode = 'single';
-let difficulty = 'medium';
+let rallyCount = 0;
+let maxRally = 0;
 
 // Game objects
 const ball = {
     x: 0,
     y: 0,
     radius: 15,
+    baseSpeed: 5,
     speed: 5,
     dx: 5,
-    dy: 5
+    dy: 5,
+    spin: 0
 };
 
 const leftPaddle = {
@@ -83,12 +86,17 @@ function initGame() {
     requestAnimationFrame(gameLoop);
 }
 
-// Reset ball
+// Reset ball with random direction
 function resetBall() {
     ball.x = canvas.width / 2;
     ball.y = canvas.height / 2;
-    ball.dx = ball.speed * (Math.random() > 0.5 ? 1 : -1);
-    ball.dy = ball.speed * (Math.random() > 0.5 ? 1 : -1);
+    ball.speed = ball.baseSpeed;
+    ball.spin = 0;
+    rallyCount = 0;
+    
+    const angle = Math.random() * Math.PI / 4 - Math.PI / 8;
+    ball.dx = ball.speed * Math.cos(angle) * (Math.random() > 0.5 ? 1 : -1);
+    ball.dy = ball.speed * Math.sin(angle);
 }
 
 // Setup controls
@@ -133,6 +141,7 @@ function setupControls() {
     document.getElementById('restartButton').addEventListener('click', () => {
         leftPaddle.score = 0;
         rightPaddle.score = 0;
+        maxRally = 0;
         updateScore();
         resetBall();
         togglePause();
@@ -145,9 +154,9 @@ function togglePause() {
     document.getElementById('pauseScreen').style.display = isPaused ? 'flex' : 'none';
 }
 
-// Update score
+// Update score display
 function updateScore() {
-    document.getElementById('scoreDisplay').textContent = `${leftPaddle.score} - ${rightPaddle.score}`;
+    document.getElementById('scoreDisplay').textContent = `${leftPaddle.score} - ${rightPaddle.score} (Rally: ${rallyCount}, Max: ${maxRally})`;
 }
 
 // Game loop
@@ -177,23 +186,27 @@ function updateGame() {
 
     // Move ball
     ball.x += ball.dx;
-    ball.y += ball.dy;
+    ball.y += ball.dy + ball.spin;
+    ball.spin *= 0.95; // Dampen spin
 
     // Ball collision with walls
-    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy = -ball.dy;
+    if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
+        ball.dy = -ball.dy;
+        ball.spin = -ball.spin;
+    }
 
     // Ball collision with paddles
     if (ball.dx < 0) {
         if (ball.x - ball.radius < leftPaddle.x + leftPaddle.width &&
             ball.y > leftPaddle.y &&
             ball.y < leftPaddle.y + leftPaddle.height) {
-            ball.dx = -ball.dx;
+            handlePaddleHit(leftPaddle);
         }
     } else {
         if (ball.x + ball.radius > rightPaddle.x &&
             ball.y > rightPaddle.y &&
             ball.y < rightPaddle.y + rightPaddle.height) {
-            ball.dx = -ball.dx;
+            handlePaddleHit(rightPaddle);
         }
     }
 
@@ -207,6 +220,27 @@ function updateGame() {
         updateScore();
         resetBall();
     }
+}
+
+// Handle paddle hit
+function handlePaddleHit(paddle) {
+    ball.dx = -ball.dx;
+    rallyCount++;
+    maxRally = Math.max(maxRally, rallyCount);
+    
+    // Calculate hit position relative to paddle center
+    const hitPosition = (ball.y - (paddle.y + paddle.height / 2)) / (paddle.height / 2);
+    
+    // Apply spin based on hit position
+    ball.spin = hitPosition * 2;
+    
+    // Increase speed based on rally length
+    ball.speed = ball.baseSpeed + Math.min(rallyCount * 0.1, 3);
+    const angle = Math.atan2(ball.dy, ball.dx);
+    ball.dx = ball.speed * Math.cos(angle);
+    ball.dy = ball.speed * Math.sin(angle);
+    
+    updateScore();
 }
 
 // Draw game
