@@ -1,24 +1,30 @@
 body {
     margin: 0;
+    padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     background-color: #1a1a1a;
     font-family: 'Arial', sans-serif;
+    overflow: hidden;
 }
 
 .game-container {
     position: relative;
-    max-width: 100%;
-    max-height: 100vh;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 canvas {
     background-color: #000;
-    border: 2px solid #fff;
+    border: 2px solid #333;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
     max-width: 100%;
-    height: auto;
+    max-height: 100%;
 }
 
 .score {
@@ -27,8 +33,9 @@ canvas {
     left: 50%;
     transform: translateX(-50%);
     color: #fff;
-    font-size: 24px;
-    font-family: 'Arial', sans-serif;
+    font-size: 2em;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     z-index: 1;
 }
 
@@ -38,13 +45,14 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
+    background-color: rgba(0, 0, 0, 0.85);
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     color: white;
     z-index: 2;
+    backdrop-filter: blur(5px);
 }
 
 .hidden {
@@ -52,10 +60,28 @@ canvas {
 }
 
 .overlay h1 {
-    font-size: 48px;
-    margin-bottom: 30px;
-    color: #fff;
-    text-shadow: 0 0 10px #fff;
+    font-size: 4em;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.overlay h2 {
+    font-size: 3em;
+    margin-bottom: 20px;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.overlay p {
+    font-size: 1.2em;
+    margin: 10px 0;
+    color: #ccc;
 }
 
 .difficulty-select {
@@ -177,42 +203,56 @@ canvas {
 /* Mobile Styles */
 @media (max-width: 768px) {
     .game-container {
-        width: 100vw;
         height: 100vh;
+        padding: 0;
     }
     
-    canvas {
-        width: 100%;
-        height: 100%;
+    .overlay h1 {
+        font-size: 3em;
     }
     
-    .instructions {
+    .overlay h2 {
+        font-size: 2em;
+    }
+    
+    .overlay p {
+        font-size: 1em;
+    }
+    
+    .difficulty-btn, .mode-btn, .settings-btn {
+        padding: 12px 24px;
+        font-size: 1em;
+    }
+    
+    .controls-info {
         display: none;
     }
     
     .mobile-instructions {
         display: block;
-    }
-    
-    .difficulty-btn {
-        padding: 15px 25px;
-        margin: 5px;
+        font-size: 1em;
+        text-align: center;
+        padding: 0 20px;
     }
     
     .settings-group {
         width: 90%;
     }
     
-    .color-picker label {
+    .color-picker label, .sound-controls label, .game-settings label {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
     }
     
-    .sound-controls label {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+    .fps-counter {
+        font-size: 0.8em;
+        padding: 5px 10px;
+    }
+    
+    .pause-button, .mute-button {
+        font-size: 1.5em;
+        padding: 10px;
     }
 }
 
@@ -247,27 +287,6 @@ canvas {
     margin: 10px 0;
     font-size: 18px;
     color: #aaa;
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-    .game-mode {
-        flex-direction: column;
-        gap: 10px;
-    }
-    
-    .mode-btn {
-        width: 100%;
-        padding: 15px;
-    }
-    
-    .instructions, .two-player-instructions {
-        display: none;
-    }
-    
-    .mobile-instructions {
-        display: block;
-    }
 }
 
 .controls-info {
@@ -351,19 +370,4 @@ canvas {
 
 #resetSettings:hover {
     background-color: #ff6666;
-}
-
-/* Mobile Styles */
-@media (max-width: 768px) {
-    .controls-info {
-        display: none;
-    }
-    
-    .game-settings input[type="range"] {
-        width: 120px;
-    }
-    
-    .mute-button {
-        bottom: 70px;
-    }
 } 

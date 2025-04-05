@@ -25,8 +25,32 @@ const bgMusicVolume = document.getElementById('bgMusicVolume');
 const sfxVolume = document.getElementById('sfxVolume');
 
 // Set canvas size
-canvas.width = 800;
-canvas.height = 400;
+function resizeCanvas() {
+    const maxWidth = window.innerWidth * 0.9;
+    const maxHeight = window.innerHeight * 0.9;
+    const aspectRatio = 16 / 9;
+    
+    let width = maxWidth;
+    let height = width / aspectRatio;
+    
+    if (height > maxHeight) {
+        height = maxHeight;
+        width = height * aspectRatio;
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    // Update paddle positions
+    player1.x = 10;
+    player2.x = canvas.width - 20;
+    player1.y = canvas.height / 2 - player1.height / 2;
+    player2.y = canvas.height / 2 - player2.height / 2;
+    
+    // Reset ball position
+    ball.x = canvas.width / 2;
+    ball.y = canvas.height / 2;
+}
 
 // Game state
 let gameStarted = false;
@@ -365,6 +389,10 @@ function initGame() {
     // Set up event listeners
     setupEventListeners();
     
+    // Resize canvas
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
     // Start FPS counter if enabled
     if (settings.game.showFPS) {
         fpsCounter.classList.remove('hidden');
@@ -623,12 +651,49 @@ function resetBall() {
     ball.dy = difficulties[difficulty].ballSpeed * (Math.random() * 2 - 1);
 }
 
-// Game loop
+// Update AI behavior
+function updateAI() {
+    if (gameMode !== 'single') return;
+    
+    const paddleCenter = player2.y + player2.height / 2;
+    const ballCenter = ball.y;
+    const distance = ballCenter - paddleCenter;
+    
+    // Smooth AI movement
+    const maxSpeed = difficulties[difficulty].computerSpeed;
+    const acceleration = 0.1;
+    const deceleration = 0.05;
+    
+    // Calculate target position with prediction
+    const prediction = ball.dy * (player2.x - ball.x) / ball.dx;
+    const targetY = ballCenter + prediction;
+    
+    // Smooth movement towards target
+    if (targetY < paddleCenter - 5) {
+        player2.speed = Math.max(0, player2.speed - acceleration);
+    } else if (targetY > paddleCenter + 5) {
+        player2.speed = Math.min(maxSpeed, player2.speed + acceleration);
+    } else {
+        player2.speed = Math.max(0, player2.speed - deceleration);
+    }
+    
+    // Move paddle
+    if (targetY < paddleCenter) {
+        player2.y = Math.max(0, player2.y - player2.speed);
+    } else if (targetY > paddleCenter) {
+        player2.y = Math.min(canvas.height - player2.height, player2.y + player2.speed);
+    }
+}
+
+// Update game loop
 function gameLoop() {
     if (!gameStarted || gamePaused) return;
     
     // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Update AI
+    updateAI();
     
     // Set background color
     ctx.fillStyle = settings.colors.background;
