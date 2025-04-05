@@ -6,71 +6,100 @@
     <title>Pong Game</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; color: #fff; overflow: hidden; }
-        #gameContainer { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
-        #scoreDisplay { 
+        body { background: #000; color: #fff; overflow: hidden; font-family: system-ui, -apple-system, sans-serif; }
+        main { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
+        header { 
             position: absolute; 
-            top: 20px; 
+            top: 1rem; 
             left: 50%; 
             transform: translateX(-50%); 
-            font-size: 24px; 
+            font-size: 1.5rem; 
             z-index: 2;
             text-align: center;
             background: rgba(0,0,0,0.5);
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
         }
-        #controlsInfo {
+        footer { 
             position: absolute;
-            bottom: 20px;
+            bottom: 1rem;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 16px;
+            font-size: 1rem;
             z-index: 2;
             text-align: center;
             background: rgba(0,0,0,0.5);
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
         }
-        #gameCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); z-index: 3; }
-        .screen h1 { margin-bottom: 20px; font-size: 48px; }
-        .screen button { margin: 10px; padding: 15px 30px; border: none; border-radius: 5px; background: #fff; color: #000; font-size: 18px; cursor: pointer; }
-        .screen button:hover { background: #ccc; }
-        .game-modes { display: flex; gap: 10px; margin-bottom: 20px; }
-        .game-mode-button { padding: 10px 20px; border: none; border-radius: 5px; background: #fff; color: #000; cursor: pointer; }
+        canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        section { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            background: rgba(0,0,0,0.8); 
+            z-index: 3; 
+        }
+        h1 { margin-bottom: 1.25rem; font-size: 3rem; }
+        button { 
+            margin: 0.625rem; 
+            padding: 0.9375rem 1.875rem; 
+            border: none; 
+            border-radius: 0.3125rem; 
+            background: #fff; 
+            color: #000; 
+            font-size: 1.125rem; 
+            cursor: pointer; 
+            transition: background-color 0.3s ease;
+        }
+        button:hover { background: #ccc; }
+        button:focus { outline: 2px solid #fff; }
+        .game-modes { display: flex; gap: 0.625rem; margin-bottom: 1.25rem; }
+        .game-mode-button { padding: 0.625rem 1.25rem; border: none; border-radius: 0.3125rem; background: #fff; color: #000; cursor: pointer; }
         .game-mode-button.active { background: #666; color: #fff; }
-        .instructions { margin-top: 20px; text-align: center; }
-        .instructions p { margin: 5px 0; }
+        .instructions { margin-top: 1.25rem; text-align: center; }
+        .instructions p { margin: 0.3125rem 0; }
+        @media (max-width: 48rem) {
+            header { font-size: 1.25rem; }
+            footer { font-size: 0.875rem; }
+            h1 { font-size: 2.25rem; }
+            button { padding: 0.625rem 1.25rem; font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
-    <div id="gameContainer">
-        <div id="scoreDisplay">0 - 0 (Rally: 0, Max: 0)</div>
-        <div id="controlsInfo">
+    <main role="main">
+        <header id="scoreDisplay" role="status" aria-live="polite">0 - 0 (Rally: 0, Max: 0)</header>
+        <footer id="controlsInfo" role="contentinfo">
             Controls: ↑↓ (Left Paddle) | W/S (Right Paddle) | ESC (Pause) | M (Music)
-        </div>
-        <canvas id="gameCanvas"></canvas>
+        </footer>
+        <canvas id="gameCanvas" role="application" aria-label="Pong game canvas"></canvas>
         
-        <div id="startScreen" class="screen">
-            <h1>Pong</h1>
-            <div class="game-modes">
-                <button class="game-mode-button active" data-mode="single">Single Player</button>
-                <button class="game-mode-button" data-mode="multiplayer">Two Players</button>
-            </div>
-            <button id="startButton">Start Game</button>
-            <div class="instructions">
+        <section id="startScreen" role="dialog" aria-labelledby="gameTitle">
+            <h1 id="gameTitle">Pong</h1>
+            <nav class="game-modes" role="navigation" aria-label="Game modes">
+                <button class="game-mode-button active" data-mode="single" aria-pressed="true">Single Player</button>
+                <button class="game-mode-button" data-mode="multiplayer" aria-pressed="false">Two Players</button>
+            </nav>
+            <button id="startButton" aria-label="Start game">Start Game</button>
+            <div class="instructions" role="complementary">
                 <p>Press M to toggle background music</p>
                 <p>Press ESC to pause the game</p>
             </div>
-        </div>
+        </section>
 
-        <div id="pauseScreen" class="screen" style="display: none;">
-            <h2>Game Paused</h2>
-            <button id="resumeButton">Resume</button>
-            <button id="restartButton">Restart</button>
-        </div>
-    </div>
-    <script src="game-simple.js"></script>
+        <section id="pauseScreen" role="dialog" aria-labelledby="pauseTitle" style="display: none;">
+            <h2 id="pauseTitle">Game Paused</h2>
+            <button id="resumeButton" aria-label="Resume game">Resume</button>
+            <button id="restartButton" aria-label="Restart game">Restart</button>
+        </section>
+    </main>
+    <script src="game-simple.js" defer></script>
 </body>
 </html> 
