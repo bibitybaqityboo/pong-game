@@ -4,7 +4,129 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong Game</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        #gameContainer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000;
+        }
+
+        #scoreDisplay {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 32px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 3;
+        }
+
+        .screen h1, .screen h2 {
+            margin-bottom: 20px;
+            font-size: 48px;
+            text-align: center;
+        }
+
+        .screen button {
+            margin: 10px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .screen button:hover {
+            background-color: #ccc;
+        }
+
+        .game-modes, .difficulty {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .game-mode-button, .difficulty-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #fff;
+            color: #000;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-mode-button:hover, .difficulty-button:hover {
+            background-color: #ccc;
+        }
+
+        .game-mode-button.active, .difficulty-button.active {
+            background-color: #666;
+            color: #fff;
+        }
+
+        @media (max-width: 768px) {
+            .screen h1 {
+                font-size: 36px;
+            }
+            
+            .screen h2 {
+                font-size: 24px;
+            }
+            
+            .game-modes, .difficulty {
+                flex-direction: column;
+            }
+            
+            .screen button {
+                padding: 10px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="gameContainer">

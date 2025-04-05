@@ -6,6 +6,8 @@ const ctx = canvas.getContext('2d');
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    // Update game objects after resize
+    updateGameDimensions();
 }
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
@@ -18,31 +20,31 @@ let difficulty = 'medium';
 let currentTheme = 'retro';
 
 // Game objects
-const ball = {
-    x: canvas.width / 2,
-    y: canvas.height / 2,
-    radius: Math.min(canvas.width, canvas.height) * 0.015,
+let ball = {
+    x: 0,
+    y: 0,
+    radius: 0,
     speed: 5,
     dx: 5,
     dy: 5
 };
 
-const leftPaddle = {
-    x: canvas.width * 0.02,
-    y: canvas.height / 2 - canvas.height * 0.1,
-    width: canvas.width * 0.01,
-    height: canvas.height * 0.2,
+let leftPaddle = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
     speed: 8,
     score: 0,
     upPressed: false,
     downPressed: false
 };
 
-const rightPaddle = {
-    x: canvas.width * 0.98 - canvas.width * 0.01,
-    y: canvas.height / 2 - canvas.height * 0.1,
-    width: canvas.width * 0.01,
-    height: canvas.height * 0.2,
+let rightPaddle = {
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
     speed: 8,
     score: 0,
     upPressed: false,
@@ -71,14 +73,37 @@ const themes = {
     }
 };
 
+// Update game dimensions based on canvas size
+function updateGameDimensions() {
+    // Ball size relative to screen
+    ball.radius = Math.min(canvas.width, canvas.height) * 0.015;
+    
+    // Paddle dimensions relative to screen
+    leftPaddle.width = canvas.width * 0.01;
+    leftPaddle.height = canvas.height * 0.2;
+    leftPaddle.x = canvas.width * 0.02;
+    
+    rightPaddle.width = canvas.width * 0.01;
+    rightPaddle.height = canvas.height * 0.2;
+    rightPaddle.x = canvas.width * 0.98 - rightPaddle.width;
+    
+    // Reset positions
+    resetBall();
+    resetPaddles();
+}
+
 // Initialize game
 function initGame() {
-    // Set initial theme
-    document.body.className = currentTheme;
+    // Set initial game mode and difficulty
+    document.querySelector('.game-mode-button[data-mode="single"]').classList.add('active');
+    document.querySelector('.difficulty-button[data-difficulty="medium"]').classList.add('active');
     
     // Add event listeners
     setupEventListeners();
     setupKeyboardControls();
+    
+    // Update game dimensions
+    updateGameDimensions();
     
     // Start game loop
     requestAnimationFrame(gameLoop);
