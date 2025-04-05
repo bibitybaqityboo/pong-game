@@ -268,4 +268,102 @@ canvas {
     .mobile-instructions {
         display: block;
     }
+}
+
+.controls-info {
+    margin: 20px 0;
+    text-align: left;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.controls-info ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 10px 0;
+}
+
+.controls-info li {
+    margin: 5px 0;
+    color: #aaa;
+}
+
+.game-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.game-settings label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+}
+
+.game-settings input[type="range"] {
+    width: 150px;
+}
+
+.game-settings input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+.fps-counter {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: #fff;
+    font-size: 14px;
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.mute-button {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 10px;
+    border-radius: 50%;
+    transition: background-color 0.3s;
+}
+
+.mute-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+#menuBtn {
+    margin-top: 20px;
+}
+
+#resetSettings {
+    background-color: #ff4444;
+}
+
+#resetSettings:hover {
+    background-color: #ff6666;
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+    .controls-info {
+        display: none;
+    }
+    
+    .game-settings input[type="range"] {
+        width: 120px;
+    }
+    
+    .mute-button {
+        bottom: 70px;
+    }
 } 

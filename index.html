@@ -5,13 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#000000">
     <meta name="description" content="A classic Pong game with modern features">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <!-- Aggressive cache control -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta http-equiv="Last-Modified" content="0">
     <meta http-equiv="ETag" content="random">
-    <title>Pong Game</title>
-    <link rel="stylesheet" href="style.css?v=3">
+    <meta http-equiv="Vary" content="*">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="noarchive">
+    <!-- Add version number to force cache refresh -->
+    <title>Pong Game v1.1</title>
+    <link rel="stylesheet" href="style.css?v=4">
     <!-- Force new deployment -->
 </head>
 <body>
@@ -30,6 +35,14 @@
             <p class="instructions">Single Player: Use ↑ and ↓ arrows to move</p>
             <p class="two-player-instructions">Two Players: Player 1 (W/S), Player 2 (↑/↓)</p>
             <p class="mobile-instructions">Tap upper/lower half of screen to move</p>
+            <div class="controls-info">
+                <p>Controls:</p>
+                <ul>
+                    <li>SPACE: Pause/Resume</li>
+                    <li>ESC: Return to menu</li>
+                    <li>M: Toggle mute</li>
+                </ul>
+            </div>
         </div>
         <div id="settingsScreen" class="overlay hidden">
             <h2>SETTINGS</h2>
@@ -49,21 +62,33 @@
                     <label>Sound Effects: <input type="range" id="sfxVolume" min="0" max="100" value="100"></label>
                 </div>
             </div>
+            <div class="settings-group">
+                <h3>Game Settings</h3>
+                <div class="game-settings">
+                    <label>Ball Speed: <input type="range" id="ballSpeed" min="1" max="10" value="5"></label>
+                    <label>Paddle Size: <input type="range" id="paddleSize" min="50" max="150" value="100"></label>
+                    <label>Show FPS: <input type="checkbox" id="showFPS"></label>
+                </div>
+            </div>
             <div class="settings-buttons">
                 <button id="saveSettings" class="settings-btn">Save</button>
                 <button id="closeSettings" class="settings-btn">Close</button>
+                <button id="resetSettings" class="settings-btn">Reset to Default</button>
             </div>
         </div>
         <div id="pauseScreen" class="overlay hidden">
             <h2>PAUSED</h2>
             <p>Press SPACE to resume</p>
             <button id="settingsBtn" class="settings-btn">Settings</button>
+            <button id="menuBtn" class="settings-btn">Return to Menu</button>
         </div>
         <canvas id="gameCanvas"></canvas>
         <div class="score">
             <span id="playerScore">0</span> - <span id="computerScore">0</span>
         </div>
+        <div id="fpsCounter" class="fps-counter hidden">FPS: 60</div>
         <button id="pauseBtn" class="pause-button">⏸️</button>
+        <button id="muteBtn" class="mute-button">🔊</button>
     </div>
     
     <!-- Audio elements -->
@@ -71,6 +96,6 @@
         <source src="audio/background.mp3" type="audio/mpeg">
     </audio>
     
-    <script src="game.js?v=3"></script>
+    <script src="game.js?v=4"></script>
 </body>
 </html> 

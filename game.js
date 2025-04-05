@@ -48,7 +48,13 @@ let settings = {
     },
     sound: {
         bgMusicVolume: 50,
-        sfxVolume: 100
+        sfxVolume: 100,
+        muted: false
+    },
+    game: {
+        ballSpeed: 5,
+        paddleSize: 100,
+        showFPS: false
     }
 };
 
@@ -56,22 +62,26 @@ let settings = {
 let audioContext;
 let sfxGain;
 
+// FPS counter
+let fps = 0;
+let lastTime = performance.now();
+const fpsCounter = document.getElementById('fpsCounter');
+
 // Initialize audio
 function initAudio() {
-    try {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        sfxGain = audioContext.createGain();
-        
-        // Set initial volumes
-        bgMusic.volume = settings.sound.bgMusicVolume / 100;
-        sfxGain.gain.value = settings.sound.sfxVolume / 100;
-        
-        // Resume audio context on user interaction
-        document.addEventListener('click', resumeAudioContext, { once: true });
-        document.addEventListener('keydown', resumeAudioContext, { once: true });
-        document.addEventListener('touchstart', resumeAudioContext, { once: true });
-    } catch (e) {
-        console.error('Web Audio API not supported:', e);
+    // Initialize audio context
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    sfxGain = audioContext.createGain();
+    sfxGain.connect(audioContext.destination);
+    
+    // Add cache-busting for audio
+    const bgMusic = document.getElementById('bgMusic');
+    bgMusic.src = `audio/background.mp3?v=${Date.now()}`;
+    
+    // Set initial volumes
+    bgMusic.volume = settings.sound.muted ? 0 : settings.sound.bgMusicVolume / 100;
+    if (sfxGain) {
+        sfxGain.gain.value = settings.sound.muted ? 0 : settings.sound.sfxVolume / 100;
     }
 }
 
@@ -239,11 +249,26 @@ function applySettings() {
     bgMusicVolume.value = settings.sound.bgMusicVolume;
     sfxVolume.value = settings.sound.sfxVolume;
     
+    // Update game settings
+    document.getElementById('ballSpeed').value = settings.game.ballSpeed;
+    document.getElementById('paddleSize').value = settings.game.paddleSize;
+    document.getElementById('showFPS').checked = settings.game.showFPS;
+    
     // Apply volumes
-    bgMusic.volume = settings.sound.bgMusicVolume / 100;
+    bgMusic.volume = settings.sound.muted ? 0 : settings.sound.bgMusicVolume / 100;
     if (sfxGain) {
-        sfxGain.gain.value = settings.sound.sfxVolume / 100;
+        sfxGain.gain.value = settings.sound.muted ? 0 : settings.sound.sfxVolume / 100;
     }
+    
+    // Update mute button
+    document.getElementById('muteBtn').textContent = settings.sound.muted ? '🔇' : '🔊';
+    
+    // Update FPS counter visibility
+    fpsCounter.classList.toggle('hidden', !settings.game.showFPS);
+    
+    // Update game elements
+    updateBallSpeed();
+    updatePaddleSize();
 }
 
 // Game objects
@@ -329,13 +354,144 @@ settingsBtn.addEventListener('click', openSettings);
 saveSettingsBtn.addEventListener('click', saveSettings);
 closeSettingsBtn.addEventListener('click', closeSettings);
 
-// Initialize audio when the game starts
-document.addEventListener('DOMContentLoaded', () => {
-    initAudio();
+// Initialize game
+function initGame() {
+    // Load settings
     loadSettings();
-});
+    
+    // Initialize audio
+    initAudio();
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Start FPS counter if enabled
+    if (settings.game.showFPS) {
+        fpsCounter.classList.remove('hidden');
+        updateFPS();
+    }
+}
 
-// Handle keyboard controls
+// Set up event listeners
+function setupEventListeners() {
+    // Existing event listeners...
+    
+    // New event listeners
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            returnToMenu();
+        } else if (e.key === 'm' || e.key === 'M') {
+            toggleMute();
+        }
+    });
+    
+    document.getElementById('menuBtn').addEventListener('click', returnToMenu);
+    document.getElementById('muteBtn').addEventListener('click', toggleMute);
+    document.getElementById('resetSettings').addEventListener('click', resetSettings);
+    
+    // Game settings event listeners
+    document.getElementById('ballSpeed').addEventListener('input', (e) => {
+        settings.game.ballSpeed = parseInt(e.target.value);
+        updateBallSpeed();
+    });
+    
+    document.getElementById('paddleSize').addEventListener('input', (e) => {
+        settings.game.paddleSize = parseInt(e.target.value);
+        updatePaddleSize();
+    });
+    
+    document.getElementById('showFPS').addEventListener('change', (e) => {
+        settings.game.showFPS = e.target.checked;
+        fpsCounter.classList.toggle('hidden', !settings.game.showFPS);
+        if (settings.game.showFPS) {
+            updateFPS();
+        }
+    });
+}
+
+// Update FPS counter
+function updateFPS() {
+    if (!settings.game.showFPS) return;
+    
+    const currentTime = performance.now();
+    const deltaTime = currentTime - lastTime;
+    lastTime = currentTime;
+    
+    fps = Math.round(1000 / deltaTime);
+    fpsCounter.textContent = `FPS: ${fps}`;
+    
+    requestAnimationFrame(updateFPS);
+}
+
+// Update ball speed
+function updateBallSpeed() {
+    const baseSpeed = difficulties[difficulty].ballSpeed;
+    ball.speed = baseSpeed * (settings.game.ballSpeed / 5);
+    ball.dx = ball.speed * (Math.random() > 0.5 ? 1 : -1);
+    ball.dy = ball.speed * (Math.random() * 2 - 1);
+}
+
+// Update paddle size
+function updatePaddleSize() {
+    const newHeight = (settings.game.paddleSize / 100) * 100;
+    player1.height = newHeight;
+    player2.height = newHeight;
+}
+
+// Toggle mute
+function toggleMute() {
+    settings.sound.muted = !settings.sound.muted;
+    const muteBtn = document.getElementById('muteBtn');
+    
+    if (settings.sound.muted) {
+        bgMusic.volume = 0;
+        if (sfxGain) sfxGain.gain.value = 0;
+        muteBtn.textContent = '🔇';
+    } else {
+        bgMusic.volume = settings.sound.bgMusicVolume / 100;
+        if (sfxGain) sfxGain.gain.value = settings.sound.sfxVolume / 100;
+        muteBtn.textContent = '🔊';
+    }
+    
+    saveSettings();
+}
+
+// Return to menu
+function returnToMenu() {
+    gameStarted = false;
+    gamePaused = false;
+    startScreen.classList.remove('hidden');
+    pauseScreen.classList.add('hidden');
+    settingsScreen.classList.add('hidden');
+    bgMusic.pause();
+    resetGame();
+}
+
+// Reset settings to default
+function resetSettings() {
+    settings = {
+        colors: {
+            player: '#ffffff',
+            computer: '#ffffff',
+            ball: '#ffffff',
+            background: '#000000'
+        },
+        sound: {
+            bgMusicVolume: 50,
+            sfxVolume: 100,
+            muted: false
+        },
+        game: {
+            ballSpeed: 5,
+            paddleSize: 100,
+            showFPS: false
+        }
+    };
+    
+    applySettings();
+    saveSettings();
+}
+
 function handleKeyDown(e) {
     if (gameMode === 'single') {
         if (e.key === 'ArrowUp') {
@@ -588,4 +744,7 @@ function drawGame() {
     ctx.strokeStyle = '#fff';
     ctx.stroke();
     ctx.setLineDash([]);
-} 
+}
+
+// Initialize the game when the page loads
+document.addEventListener('DOMContentLoaded', initGame); 
