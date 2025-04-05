@@ -9,11 +9,6 @@
 <body>
     <div id="gameContainer">
         <div id="scoreDisplay">0 - 0</div>
-        <div id="themeSelector">
-            <button class="theme-button" data-theme="retro">Retro</button>
-            <button class="theme-button" data-theme="neon">Neon</button>
-            <button class="theme-button" data-theme="minimal">Minimal</button>
-        </div>
         <canvas id="gameCanvas"></canvas>
         
         <!-- Start Screen -->
@@ -36,26 +31,6 @@
             <h2>Game Paused</h2>
             <button id="resumeButton">Resume</button>
             <button id="restartButton">Restart</button>
-        </div>
-
-        <!-- Settings Screen -->
-        <div id="settingsScreen" class="screen" style="display: none;">
-            <h2>Settings</h2>
-            <div class="settings-group">
-                <label>
-                    <input type="checkbox" id="soundToggle" checked>
-                    Sound Effects
-                </label>
-                <label>
-                    <input type="checkbox" id="musicToggle" checked>
-                    Background Music
-                </label>
-                <label>
-                    Volume
-                    <input type="range" id="volumeSlider" min="0" max="100" value="50">
-                </label>
-            </div>
-            <button id="backButton">Back</button>
         </div>
     </div>
     <script src="game-simple.js"></script>

@@ -6,21 +6,18 @@
 
 body {
     font-family: Arial, sans-serif;
-    background-color: #1a1a1a;
-    color: #ffffff;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
+    background-color: #000;
+    color: #fff;
+    overflow: hidden;
 }
 
 #gameContainer {
-    position: relative;
-    width: 800px;
-    height: 400px;
-    background-color: #000000;
-    border: 2px solid #333333;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000;
 }
 
 #scoreDisplay {
@@ -30,7 +27,6 @@ body {
     transform: translateX(-50%);
     font-size: 32px;
     font-weight: bold;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
     z-index: 2;
 }
 
@@ -62,6 +58,9 @@ body {
 }
 
 #gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
     display: block;
@@ -84,23 +83,23 @@ body {
 .screen h1, .screen h2 {
     margin-bottom: 20px;
     font-size: 48px;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+    text-align: center;
 }
 
 .screen button {
     margin: 10px;
-    padding: 10px 20px;
+    padding: 15px 30px;
     border: none;
     border-radius: 5px;
-    background-color: #333333;
-    color: #ffffff;
+    background-color: #fff;
+    color: #000;
     font-size: 18px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .screen button:hover {
-    background-color: #444444;
+    background-color: #ccc;
 }
 
 .game-modes, .difficulty {
@@ -113,19 +112,20 @@ body {
     padding: 10px 20px;
     border: none;
     border-radius: 5px;
-    background-color: #333333;
-    color: #ffffff;
+    background-color: #fff;
+    color: #000;
     font-size: 16px;
     cursor: pointer;
     transition: all 0.3s ease;
 }
 
 .game-mode-button:hover, .difficulty-button:hover {
-    background-color: #444444;
+    background-color: #ccc;
 }
 
 .game-mode-button.active, .difficulty-button.active {
-    background-color: #666666;
+    background-color: #666;
+    color: #fff;
 }
 
 .settings-group {
@@ -179,13 +179,7 @@ body {
 }
 
 /* Responsive design */
-@media (max-width: 800px) {
-    #gameContainer {
-        width: 100%;
-        height: 100vh;
-        border: none;
-    }
-    
+@media (max-width: 768px) {
     .screen h1 {
         font-size: 36px;
     }
@@ -196,6 +190,11 @@ body {
     
     .game-modes, .difficulty {
         flex-direction: column;
+    }
+    
+    .screen button {
+        padding: 10px 20px;
+        font-size: 16px;
     }
 }
 

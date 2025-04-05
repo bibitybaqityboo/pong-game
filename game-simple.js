@@ -1,8 +1,14 @@
 // Canvas setup
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-canvas.width = 800;
-canvas.height = 400;
+
+// Set canvas size to window size
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
 
 // Game state
 let gameStarted = false;
@@ -15,17 +21,17 @@ let currentTheme = 'retro';
 const ball = {
     x: canvas.width / 2,
     y: canvas.height / 2,
-    radius: 10,
+    radius: Math.min(canvas.width, canvas.height) * 0.015,
     speed: 5,
     dx: 5,
     dy: 5
 };
 
 const leftPaddle = {
-    x: 10,
-    y: canvas.height / 2 - 50,
-    width: 10,
-    height: 100,
+    x: canvas.width * 0.02,
+    y: canvas.height / 2 - canvas.height * 0.1,
+    width: canvas.width * 0.01,
+    height: canvas.height * 0.2,
     speed: 8,
     score: 0,
     upPressed: false,
@@ -33,10 +39,10 @@ const leftPaddle = {
 };
 
 const rightPaddle = {
-    x: canvas.width - 20,
-    y: canvas.height / 2 - 50,
-    width: 10,
-    height: 100,
+    x: canvas.width * 0.98 - canvas.width * 0.01,
+    y: canvas.height / 2 - canvas.height * 0.1,
+    width: canvas.width * 0.01,
+    height: canvas.height * 0.2,
     speed: 8,
     score: 0,
     upPressed: false,
@@ -304,5 +310,4 @@ function drawGame() {
 }
 
 // Start the game
-window.addEventListener('load', initGame); 
 window.addEventListener('load', initGame); 
