@@ -125,4 +125,388 @@ canvas {
         padding: 15px 25px;
         margin: 5px;
     }
+}
+
+/* Theme-specific styles */
+.theme-retro {
+    --bg-color: #000000;
+    --paddle-color: #ffffff;
+    --ball-color: #ffffff;
+    --power-up-color: #ff0000;
+    --particle-color: #ffff00;
+}
+
+.theme-neon {
+    --bg-color: #0a0a2a;
+    --paddle-color: #00ffff;
+    --ball-color: #ff00ff;
+    --power-up-color: #ffff00;
+    --particle-color: #00ff00;
+}
+
+.theme-minimalist {
+    --bg-color: #ffffff;
+    --paddle-color: #000000;
+    --ball-color: #000000;
+    --power-up-color: #666666;
+    --particle-color: #999999;
+}
+
+/* Visual effects */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: fadeOut 1s ease-out forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Score animation */
+.score-animation {
+    animation: scorePop 0.5s ease-out;
+}
+
+@keyframes scorePop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Power-up effects */
+.power-up {
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Progress bar */
+.progress-bar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 10px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--paddle-color);
+    transition: width 0.3s ease-out;
+}
+
+/* Theme selector */
+.theme-selector {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.theme-button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #fff;
+    transition: transform 0.2s;
+}
+
+.theme-button:hover {
+    transform: scale(1.1);
+}
+
+/* Ball trail effect */
+.ball-trail {
+    position: absolute;
+    background: var(--ball-color);
+    border-radius: 50%;
+    opacity: 0.5;
+    pointer-events: none;
+    animation: trailFade 0.5s ease-out forwards;
+}
+
+@keyframes trailFade {
+    from { opacity: 0.5; }
+    to { opacity: 0; }
+}
+
+/* Responsive design improvements */
+@media (max-width: 768px) {
+    .theme-selector {
+        top: 10px;
+        right: 10px;
+    }
+    
+    .theme-button {
+        width: 25px;
+        height: 25px;
+    }
+    
+    .progress-bar {
+        bottom: 10px;
+    }
+}
+
+/* Accessibility improvements */
+.theme-button:focus {
+    outline: 2px solid var(--power-up-color);
+}
+
+/* Performance optimizations */
+canvas {
+    will-change: transform;
+    image-rendering: optimizeSpeed;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: optimize-contrast;
+    -ms-interpolation-mode: nearest-neighbor;
+}
+
+/* Game Mode Selector */
+.game-mode-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.mode-button {
+    padding: 10px;
+    border: 2px solid var(--paddle-color);
+    background: transparent;
+    color: var(--paddle-color);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.mode-button:hover {
+    background: var(--paddle-color);
+    color: var(--bg-color);
+}
+
+.mode-button.active {
+    background: var(--paddle-color);
+    color: var(--bg-color);
+}
+
+/* High Scores Screen */
+.high-scores-container {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.high-scores-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    background: transparent;
+    color: var(--paddle-color);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-button.active {
+    border-bottom-color: var(--paddle-color);
+}
+
+.high-scores-list {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.high-score-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Game Over Screen */
+.final-score {
+    font-size: 24px;
+    margin: 20px 0;
+}
+
+.name-input {
+    margin: 20px 0;
+}
+
+#playerName {
+    padding: 10px;
+    font-size: 20px;
+    width: 100px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+/* Debug Panel */
+#debugPanel {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    border-radius: 5px;
+    font-family: monospace;
+    color: #fff;
+}
+
+.debug-info p {
+    margin: 5px 0;
+}
+
+/* QR Code Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: var(--bg-color);
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* Time Warp Effect */
+.time-warp {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+    animation: timeWarp 2s ease-in-out;
+}
+
+@keyframes timeWarp {
+    0% { opacity: 0; }
+    50% { opacity: 0.5; }
+    100% { opacity: 0; }
+}
+
+/* Combo Effects */
+.combo-text {
+    position: absolute;
+    font-size: 48px;
+    color: var(--power-up-color);
+    animation: comboPop 0.5s ease-out;
+}
+
+@keyframes comboPop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 0; }
+}
+
+/* Wobbly Mode Effect */
+.wobbly-ball {
+    animation: wobble 0.5s infinite;
+}
+
+@keyframes wobble {
+    0% { transform: rotate(0deg); }
+    25% { transform: rotate(5deg); }
+    75% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+}
+
+/* Zen Mode Styles */
+.zen-mode {
+    background: linear-gradient(45deg, #1a1a1a, #2a2a2a);
+}
+
+.zen-mode .paddle {
+    transition: transform 0.3s ease;
+}
+
+.zen-mode .ball {
+    transition: transform 0.3s ease;
+}
+
+/* Boss Battle Mode */
+.boss-paddle {
+    background: linear-gradient(45deg, #ff0000, #ff6600);
+    animation: bossGlow 2s infinite;
+}
+
+@keyframes bossGlow {
+    0% { box-shadow: 0 0 10px #ff0000; }
+    50% { box-shadow: 0 0 20px #ff6600; }
+    100% { box-shadow: 0 0 10px #ff0000; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .game-mode-selector {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .high-scores-container {
+        width: 90%;
+    }
+    
+    .modal-content {
+        width: 90%;
+    }
+}
+
+/* Accessibility Improvements */
+button:focus, input:focus {
+    outline: 2px solid var(--power-up-color);
+    outline-offset: 2px;
+}
+
+/* Performance Optimizations */
+.hidden {
+    display: none !important;
+}
+
+/* Theme-specific animations */
+.theme-retro .combo-text {
+    text-shadow: 2px 2px 0 #000;
+}
+
+.theme-neon .combo-text {
+    text-shadow: 0 0 10px var(--power-up-color);
+}
+
+.theme-minimalist .combo-text {
+    text-shadow: none;
 } 
