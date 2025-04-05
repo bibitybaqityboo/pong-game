@@ -17,4 +17,4 @@ A classic Pong game built with HTML5 Canvas and JavaScript.
 - HTML5
 - CSS3
 - JavaScript
-- Canvas API 
+- Canvas API
