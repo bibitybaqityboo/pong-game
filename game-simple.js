@@ -4,7 +4,6 @@ const ctx = canvas.getContext('2d');
 
 // Audio setup
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-let backgroundMusic = null;
 let isMusicPlaying = false;
 
 // Sound effects
@@ -80,57 +79,71 @@ const themes = {
 
 // Initialize game
 function initGame() {
-    // Set canvas size
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    // Position paddles
-    leftPaddle.y = canvas.height / 2 - leftPaddle.height / 2;
-    rightPaddle.x = canvas.width - 30;
-    rightPaddle.y = canvas.height / 2 - rightPaddle.height / 2;
-    
-    // Reset ball
-    resetBall();
-    
-    // Setup controls
-    setupControls();
-    
-    // Setup audio
-    setupAudio();
-    
-    // Start game loop
-    requestAnimationFrame(gameLoop);
+    try {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        leftPaddle.y = canvas.height / 2 - leftPaddle.height / 2;
+        rightPaddle.x = canvas.width - 30;
+        rightPaddle.y = canvas.height / 2 - rightPaddle.height / 2;
+        
+        resetBall();
+        setupControls();
+        setupAudio();
+        requestAnimationFrame(gameLoop);
+    } catch (error) {
+        console.error('Game initialization failed:', error);
+    }
 }
 
 // Setup audio
 function setupAudio() {
-    // Preload sounds
-    Object.values(sounds).forEach(sound => {
-        sound.volume = 0.5;
-        sound.load();
-    });
-    
-    // Setup background music
-    sounds.background.loop = true;
-    sounds.background.volume = 0.3;
+    try {
+        // Preload sounds
+        Object.values(sounds).forEach(sound => {
+            sound.volume = 0.5;
+            sound.load();
+        });
+        
+        // Setup background music
+        sounds.background.loop = true;
+        sounds.background.volume = 0.3;
+        
+        // Resume audio context on user interaction
+        document.addEventListener('click', () => {
+            if (audioContext.state === 'suspended') {
+                audioContext.resume();
+            }
+        }, { once: true });
+    } catch (error) {
+        console.error('Audio setup failed:', error);
+    }
 }
 
 // Play sound effect
 function playSound(soundName) {
-    if (sounds[soundName]) {
-        sounds[soundName].currentTime = 0;
-        sounds[soundName].play().catch(e => console.log('Audio play failed:', e));
+    try {
+        if (sounds[soundName]) {
+            sounds[soundName].currentTime = 0;
+            sounds[soundName].play().catch(e => console.error('Audio play failed:', e));
+        }
+    } catch (error) {
+        console.error('Sound playback failed:', error);
     }
 }
 
 // Toggle background music
 function toggleMusic() {
-    if (isMusicPlaying) {
-        sounds.background.pause();
-    } else {
-        sounds.background.play().catch(e => console.log('Music play failed:', e));
+    try {
+        if (isMusicPlaying) {
+            sounds.background.pause();
+        } else {
+            sounds.background.play().catch(e => console.error('Music play failed:', e));
+        }
+        isMusicPlaying = !isMusicPlaying;
+    } catch (error) {
+        console.error('Music toggle failed:', error);
     }
-    isMusicPlaying = !isMusicPlaying;
 }
 
 // Reset ball with random direction
@@ -148,78 +161,94 @@ function resetBall() {
 
 // Setup controls
 function setupControls() {
-    // Keyboard controls
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'ArrowUp') leftPaddle.upPressed = true;
-        if (e.key === 'ArrowDown') leftPaddle.downPressed = true;
-        if (gameMode === 'multiplayer') {
-            if (e.key === 'w') rightPaddle.upPressed = true;
-            if (e.key === 's') rightPaddle.downPressed = true;
-        }
-        if (e.key === 'Escape') togglePause();
-        if (e.key === 'm') toggleMusic();
-    });
-
-    document.addEventListener('keyup', (e) => {
-        if (e.key === 'ArrowUp') leftPaddle.upPressed = false;
-        if (e.key === 'ArrowDown') leftPaddle.downPressed = false;
-        if (gameMode === 'multiplayer') {
-            if (e.key === 'w') rightPaddle.upPressed = false;
-            if (e.key === 's') rightPaddle.downPressed = false;
-        }
-    });
-
-    // Game mode buttons
-    document.querySelectorAll('.game-mode-button').forEach(button => {
-        button.addEventListener('click', () => {
-            gameMode = button.dataset.mode;
-            document.querySelectorAll('.game-mode-button').forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+    try {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp') leftPaddle.upPressed = true;
+            if (e.key === 'ArrowDown') leftPaddle.downPressed = true;
+            if (gameMode === 'multiplayer') {
+                if (e.key === 'w') rightPaddle.upPressed = true;
+                if (e.key === 's') rightPaddle.downPressed = true;
+            }
+            if (e.key === 'Escape') togglePause();
+            if (e.key === 'm') toggleMusic();
         });
-    });
 
-    // Start button
-    document.getElementById('startButton').addEventListener('click', () => {
-        gameStarted = true;
-        document.getElementById('startScreen').style.display = 'none';
-        if (!isMusicPlaying) toggleMusic();
-    });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp') leftPaddle.upPressed = false;
+            if (e.key === 'ArrowDown') leftPaddle.downPressed = false;
+            if (gameMode === 'multiplayer') {
+                if (e.key === 'w') rightPaddle.upPressed = false;
+                if (e.key === 's') rightPaddle.downPressed = false;
+            }
+        });
 
-    // Pause screen buttons
-    document.getElementById('resumeButton').addEventListener('click', togglePause);
-    document.getElementById('restartButton').addEventListener('click', () => {
-        leftPaddle.score = 0;
-        rightPaddle.score = 0;
-        maxRally = 0;
-        updateScore();
-        resetBall();
-        togglePause();
-    });
+        document.querySelectorAll('.game-mode-button').forEach(button => {
+            button.addEventListener('click', () => {
+                gameMode = button.dataset.mode;
+                document.querySelectorAll('.game-mode-button').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.setAttribute('aria-pressed', 'false');
+                });
+                button.classList.add('active');
+                button.setAttribute('aria-pressed', 'true');
+            });
+        });
+
+        document.getElementById('startButton').addEventListener('click', () => {
+            gameStarted = true;
+            document.getElementById('startScreen').style.display = 'none';
+            if (!isMusicPlaying) toggleMusic();
+        });
+
+        document.getElementById('resumeButton').addEventListener('click', togglePause);
+        document.getElementById('restartButton').addEventListener('click', () => {
+            leftPaddle.score = 0;
+            rightPaddle.score = 0;
+            maxRally = 0;
+            updateScore();
+            resetBall();
+            togglePause();
+        });
+    } catch (error) {
+        console.error('Controls setup failed:', error);
+    }
 }
 
 // Toggle pause
 function togglePause() {
-    isPaused = !isPaused;
-    document.getElementById('pauseScreen').style.display = isPaused ? 'flex' : 'none';
-    if (isPaused) {
-        sounds.background.pause();
-    } else if (isMusicPlaying) {
-        sounds.background.play().catch(e => console.log('Music play failed:', e));
+    try {
+        isPaused = !isPaused;
+        document.getElementById('pauseScreen').style.display = isPaused ? 'flex' : 'none';
+        if (isPaused) {
+            sounds.background.pause();
+        } else if (isMusicPlaying) {
+            sounds.background.play().catch(e => console.error('Music play failed:', e));
+        }
+    } catch (error) {
+        console.error('Pause toggle failed:', error);
     }
 }
 
 // Update score display
 function updateScore() {
-    document.getElementById('scoreDisplay').textContent = `${leftPaddle.score} - ${rightPaddle.score} (Rally: ${rallyCount}, Max: ${maxRally})`;
+    try {
+        document.getElementById('scoreDisplay').textContent = `${leftPaddle.score} - ${rightPaddle.score} (Rally: ${rallyCount}, Max: ${maxRally})`;
+    } catch (error) {
+        console.error('Score update failed:', error);
+    }
 }
 
 // Game loop
 function gameLoop() {
-    if (!isPaused && gameStarted) {
-        updateGame();
+    try {
+        if (!isPaused && gameStarted) {
+            updateGame();
+        }
+        drawGame();
+        requestAnimationFrame(gameLoop);
+    } catch (error) {
+        console.error('Game loop error:', error);
     }
-    drawGame();
-    requestAnimationFrame(gameLoop);
 }
 
 // Update game state
