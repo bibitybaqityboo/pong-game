@@ -8,11 +8,32 @@
 </head>
 <body>
     <div class="game-container">
+        <div id="startScreen" class="overlay">
+            <h1>PONG</h1>
+            <div class="difficulty-select">
+                <button class="difficulty-btn" data-difficulty="easy">Easy</button>
+                <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+                <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+            </div>
+            <p class="instructions">Use ↑ and ↓ arrows to move</p>
+            <p class="mobile-instructions">Tap upper/lower half of screen to move</p>
+        </div>
+        <div id="pauseScreen" class="overlay hidden">
+            <h2>PAUSED</h2>
+            <p>Press SPACE to resume</p>
+        </div>
         <canvas id="gameCanvas"></canvas>
         <div class="score">
             <span id="playerScore">0</span> - <span id="computerScore">0</span>
         </div>
+        <button id="pauseBtn" class="pause-button">⏸️</button>
     </div>
+    
+    <!-- Audio elements -->
+    <audio id="paddleHit" src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" preload="auto"></audio>
+    <audio id="wallHit" src="https://assets.mixkit.co/active_storage/sfx/2572/2572-preview.mp3" preload="auto"></audio>
+    <audio id="score" src="https://assets.mixkit.co/active_storage/sfx/2570/2570-preview.mp3" preload="auto"></audio>
+    
     <script src="game.js"></script>
 </body>
 </html> 
