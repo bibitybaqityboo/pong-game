@@ -2,6 +2,19 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Audio setup
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+let backgroundMusic = null;
+let isMusicPlaying = false;
+
+// Sound effects
+const sounds = {
+    paddleHit: new Audio('sounds/paddle-hit.mp3'),
+    wallHit: new Audio('sounds/wall-hit.mp3'),
+    score: new Audio('sounds/score.mp3'),
+    background: new Audio('sounds/background-music.mp3')
+};
+
 // Game state
 let gameStarted = false;
 let isPaused = false;
@@ -82,8 +95,42 @@ function initGame() {
     // Setup controls
     setupControls();
     
+    // Setup audio
+    setupAudio();
+    
     // Start game loop
     requestAnimationFrame(gameLoop);
+}
+
+// Setup audio
+function setupAudio() {
+    // Preload sounds
+    Object.values(sounds).forEach(sound => {
+        sound.volume = 0.5;
+        sound.load();
+    });
+    
+    // Setup background music
+    sounds.background.loop = true;
+    sounds.background.volume = 0.3;
+}
+
+// Play sound effect
+function playSound(soundName) {
+    if (sounds[soundName]) {
+        sounds[soundName].currentTime = 0;
+        sounds[soundName].play().catch(e => console.log('Audio play failed:', e));
+    }
+}
+
+// Toggle background music
+function toggleMusic() {
+    if (isMusicPlaying) {
+        sounds.background.pause();
+    } else {
+        sounds.background.play().catch(e => console.log('Music play failed:', e));
+    }
+    isMusicPlaying = !isMusicPlaying;
 }
 
 // Reset ball with random direction
@@ -110,6 +157,7 @@ function setupControls() {
             if (e.key === 's') rightPaddle.downPressed = true;
         }
         if (e.key === 'Escape') togglePause();
+        if (e.key === 'm') toggleMusic();
     });
 
     document.addEventListener('keyup', (e) => {
@@ -134,6 +182,7 @@ function setupControls() {
     document.getElementById('startButton').addEventListener('click', () => {
         gameStarted = true;
         document.getElementById('startScreen').style.display = 'none';
+        if (!isMusicPlaying) toggleMusic();
     });
 
     // Pause screen buttons
@@ -152,6 +201,11 @@ function setupControls() {
 function togglePause() {
     isPaused = !isPaused;
     document.getElementById('pauseScreen').style.display = isPaused ? 'flex' : 'none';
+    if (isPaused) {
+        sounds.background.pause();
+    } else if (isMusicPlaying) {
+        sounds.background.play().catch(e => console.log('Music play failed:', e));
+    }
 }
 
 // Update score display
@@ -193,6 +247,7 @@ function updateGame() {
     if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) {
         ball.dy = -ball.dy;
         ball.spin = -ball.spin;
+        playSound('wallHit');
     }
 
     // Ball collision with paddles
@@ -213,10 +268,12 @@ function updateGame() {
     // Scoring
     if (ball.x - ball.radius < 0) {
         rightPaddle.score++;
+        playSound('score');
         updateScore();
         resetBall();
     } else if (ball.x + ball.radius > canvas.width) {
         leftPaddle.score++;
+        playSound('score');
         updateScore();
         resetBall();
     }
@@ -240,6 +297,7 @@ function handlePaddleHit(paddle) {
     ball.dx = ball.speed * Math.cos(angle);
     ball.dy = ball.speed * Math.sin(angle);
     
+    playSound('paddleHit');
     updateScore();
 }
 

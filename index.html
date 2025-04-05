@@ -20,6 +20,18 @@
             padding: 10px 20px;
             border-radius: 5px;
         }
+        #controlsInfo {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 16px;
+            z-index: 2;
+            text-align: center;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
         #gameCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.8); z-index: 3; }
         .screen h1 { margin-bottom: 20px; font-size: 48px; }
@@ -28,11 +40,16 @@
         .game-modes { display: flex; gap: 10px; margin-bottom: 20px; }
         .game-mode-button { padding: 10px 20px; border: none; border-radius: 5px; background: #fff; color: #000; cursor: pointer; }
         .game-mode-button.active { background: #666; color: #fff; }
+        .instructions { margin-top: 20px; text-align: center; }
+        .instructions p { margin: 5px 0; }
     </style>
 </head>
 <body>
     <div id="gameContainer">
         <div id="scoreDisplay">0 - 0 (Rally: 0, Max: 0)</div>
+        <div id="controlsInfo">
+            Controls: ↑↓ (Left Paddle) | W/S (Right Paddle) | ESC (Pause) | M (Music)
+        </div>
         <canvas id="gameCanvas"></canvas>
         
         <div id="startScreen" class="screen">
@@ -42,6 +59,10 @@
                 <button class="game-mode-button" data-mode="multiplayer">Two Players</button>
             </div>
             <button id="startButton">Start Game</button>
+            <div class="instructions">
+                <p>Press M to toggle background music</p>
+                <p>Press ESC to pause the game</p>
+            </div>
         </div>
 
         <div id="pauseScreen" class="screen" style="display: none;">
